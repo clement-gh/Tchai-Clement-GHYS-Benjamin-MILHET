@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  tchai_flask_app:
+    build: ./
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - tchai_redis
+
+  tchai_redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
