@@ -7,3 +7,15 @@ L'objectif du projet est de concevoir un système de transactions électroniques
 ## Membres du groupe
  - Clément GHYS - clement_ghys@etu.u-bourgogne.fr
  - Benjamin MILHET - benjamin_milhet@etu.u-bourgogne.fr
+
+## Lancement des conteneurs
+
+### DOCKER BUILD 
+```
+docker-compose build
+```
+
+### DOCKER RUN
+```
+docker-compose up
+```

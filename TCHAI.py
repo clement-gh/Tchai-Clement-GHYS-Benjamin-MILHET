@@ -27,10 +27,11 @@ def getTransactions():
     # curl -X GET  http://127.0.0.1:5000/getTransactions
 
     liste_res = []
-    tmp = rTransaction.keys("transaction.*.*")
+    tmp = rTransaction.keys("transaction.*")
     for i in range(len(tmp)):
-        liste_res.append(tmp[i][13:])
-    liste_res.sort()
+        liste_res.append(tmp[i])
+        #liste_res.append(rTransaction.get(tmp[i]))
+
     return liste_res
 
 @app.route("/chargerDonnees", methods=['GET'])
