@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import sys
 import redis
 import json
@@ -18,7 +18,7 @@ def hello_world():
 
 
 @app.route("/getTransactions", methods=['GET'])
-def getTransactions():
+def get_transactions():
     """
         Renvoie la liste des transactions
 
@@ -43,6 +43,31 @@ def getTransactions():
         for j in range(len(list_data)):
             liste_res[i][list_data[j]] = rTransaction.get("transaction." + list_id[i] + "." + list_data[j])
 
+    return liste_res
+
+@app.route("/getTransactionsParPersonne", methods=['POST'])
+def get_transactions_par_personne():
+    """
+        Renvoie la liste des transactions pour une personne
+
+        :param: nom de la personne
+
+        :return: liste des transactions de la personne
+    """
+    # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"nom\":\"Benjamin\"}" http://localhost:5000/getTransactionsParPersonne
+
+    data = request.get_json()
+    nom = data.get('nom')
+
+    liste_res = []
+    list_id_transaction = json.loads(rUser.get("transaction." + nom))
+    for i in range(len(list_id_transaction)):
+        #liste_res.append(list_id_transaction[i])
+        #liste_res.append({})
+        liste_res[i].append(rTransaction.get("transaction.1.donneur"))
+        #liste_res[i]["donneur"] = rTransaction.get("transaction." + list_id_transaction[i] + ".donneur")
+        #liste_res[i]["receveur"] = rTransaction.get("transaction." + list_id_transaction[i] + ".receveur")
+        #liste_res[i]["valeur"] = rTransaction.get("transaction." + list_id_transaction[i] + ".valeur")
     return liste_res
 
 @app.route("/chargerDonnees", methods=['GET'])
@@ -74,6 +99,7 @@ def charger_donnees():
     rTransaction.set("transaction.2.valeur", "300")
 
     return "Le chargement des données à réussi."
+
 
 
 
