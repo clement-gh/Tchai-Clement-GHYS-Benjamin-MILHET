@@ -27,10 +27,21 @@ def getTransactions():
     # curl -X GET  http://127.0.0.1:5000/getTransactions
 
     liste_res = []
-    tmp = rTransaction.keys("transaction.*.*")
+    tmp = rTransaction.keys("transaction.*")
     tmp.sort()
+    list_id = []
+    list_data = []
     for i in range(len(tmp)):
-        liste_res.append(rTransaction.get(tmp[i]))
+        list_id.append(tmp[i].split(".")[1])
+        list_data.append(tmp[i].split(".")[2])
+
+    list_id = list(set(list_id))
+    list_data = list(set(list_data))
+
+    for i in range(len(list_id)):
+        liste_res.append({})
+        for j in range(len(list_data)):
+            liste_res[i][list_data[j]] = rTransaction.get("transaction." + list_id[i] + "." + list_data[j])
 
     return liste_res
 
@@ -46,9 +57,12 @@ def charger_donnees():
     # charger users
     rUser.set("nom.Benjamin", "Benjamin")
     rUser.set("transaction.Benjamin", json.dumps([1, 2]))
+    rUser.set("solde.Benjamin", "400")
 
     rUser.set("nom.Clement", "Clement")
     rUser.set("transaction.Clement", json.dumps([1, 2]))
+    rUser.set("solde.Clement", "200")
+
 
     # charger tweets
     rTransaction.set("transaction.1.donneur", "Benjamin")
