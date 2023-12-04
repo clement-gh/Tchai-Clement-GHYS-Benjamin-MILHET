@@ -20,6 +20,18 @@ rTransaction = redis.Redis(host='TCHAI_redis', port=6379, db=1, decode_responses
 def hello_world():
     return "Hello, world!"
 
+@app.route("/getAllUsers", methods=['GET'])
+def get_all_users():
+    """
+        Permet de récupérer tous les utilisateurs au format JSON
+
+        :return: Un JSON contenant tous les utilisateurs
+    """
+    liste_res = []
+    tmp = rUser.keys("nom.*")
+    for i in range(len(tmp)):
+        liste_res.append(tmp[i][4:])
+    return liste_res
 
 @app.route("/getTransactions", methods=['GET'])
 def get_transactions():
@@ -31,22 +43,16 @@ def get_transactions():
     # curl -X GET  http://127.0.0.1:5000/getTransactions
 
     liste_res = []
-    tmp = rTransaction.keys("transaction.*")
-    tmp.sort()
-    list_id = []
-    list_data = []
-    for i in range(len(tmp)):
-        list_id.append(tmp[i].split(".")[1])
-        list_data.append(tmp[i].split(".")[2])
+    liste_users = get_all_users()
+    liste_transaction = []
+    for i in range(len(liste_users)):
+        if rUser.get(("transaction." + liste_users[i])) is not None:
+            for j in range(len(json.loads(rUser.get(("transaction." + liste_users[i]))))):
+                liste_transaction.append(json.loads(rUser.get(("transaction." + liste_users[i])))[j])
+    liste_transaction = list(set(liste_transaction))
 
-    list_id = list(set(list_id))
-    list_data = list(set(list_data))
-
-    for i in range(len(list_id)):
-        liste_res.append({})
-        for j in range(len(list_data)):
-            liste_res[i][list_data[j]] = rTransaction.get("transaction." + list_id[i] + "." + list_data[j])
-
+    for j in range(len(liste_transaction)):
+        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
     return liste_res
 
 @app.route("/getTransactionsParPersonne", methods=['POST'])
@@ -64,14 +70,16 @@ def get_transactions_par_personne():
     nom = data.get('nom')
 
     liste_res = []
-    list_id_transaction = json.loads(rUser.get("transaction." + nom))
-    for i in range(len(list_id_transaction)):
-        #liste_res.append(list_id_transaction[i])
-        #liste_res.append({})
-        liste_res[i].append(rTransaction.get("transaction.1.donneur"))
-        #liste_res[i]["donneur"] = rTransaction.get("transaction." + list_id_transaction[i] + ".donneur")
-        #liste_res[i]["receveur"] = rTransaction.get("transaction." + list_id_transaction[i] + ".receveur")
-        #liste_res[i]["valeur"] = rTransaction.get("transaction." + list_id_transaction[i] + ".valeur")
+    liste_transaction = []
+    if rUser.get(("transaction." + nom)) is not None:
+        for j in range(len(json.loads(rUser.get(("transaction." + nom))))):
+            liste_transaction.append(json.loads(rUser.get(("transaction." + nom)))[j])
+    liste_transaction = list(set(liste_transaction))
+
+    for j in range(len(liste_transaction)):
+        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
+                              receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
+                              valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
     return liste_res
 
 @app.route("/chargerDonnees", methods=['GET'])
@@ -105,9 +113,13 @@ def charger_donnees():
 
 @app.route("/enregisterTransaction", methods=['POST'])
 def enregistrer_transaction():
+    """
+        Permet d'enregistrer une transaction dans la base de données
 
+        :return: Un JSON contenant le message de confirmation
+    """
+    # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"donneur\":\"Benjamin\", \"receveur\":\"Clement\", \"valeur\":\"100\"}" http://localhost:5000/enregisterTransaction
 
-    #  curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"donneur\":\"Benjamin\", \"receveur\":\"Clement\", \"valeur\":\"100\"}" http://localhost:5000/enregisterTransaction
     time_stamp = calendar.timegm(time.gmtime())
 
     data = request.get_json()
@@ -115,11 +127,18 @@ def enregistrer_transaction():
     receveur = data.get("receveur")
     valeur = data.get('valeur')
 
+    if rUser.get("nom." + donneur) is None:
+        rUser.set("nom." + donneur, donneur)
+        rUser.set("transaction." + donneur, json.dumps([]))
+        rUser.set("solde." + donneur, "0")
 
+    if rUser.get("nom." + receveur) is None:
+        rUser.set("nom." + receveur, receveur)
+        rUser.set("transaction." + receveur, json.dumps([]))
+        rUser.set("solde." + receveur, "0")
 
     liste_transaction_donneur= json.loads(rUser.get("transaction." + donneur))
     liste_transactin_receveur= json.loads(rUser.get("transaction." + receveur))
-
 
     #on ajoute la transaction au donneur
     liste_transaction_donneur.append(time_stamp)   
@@ -143,8 +162,6 @@ def enregistrer_transaction():
     solde_receveur = int(rUser.get("solde." + receveur))
     solde_receveur = solde_receveur + int(valeur)
     rUser.set("solde." + receveur, str(solde_receveur))
-
-    
 
     return "La transaction a été enregistrée."
 
