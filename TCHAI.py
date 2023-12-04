@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask, request, jsonify, Response
 import sys
 import redis
 import json
+
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -46,9 +47,12 @@ def charger_donnees():
     # charger users
     rUser.set("nom.Benjamin", "Benjamin")
     rUser.set("transaction.Benjamin", json.dumps([1, 2]))
+    rUser.set("solde.Benjamin", "400")
 
     rUser.set("nom.Clement", "Clement")
     rUser.set("transaction.Clement", json.dumps([1, 2]))
+    rUser.set("solde.Clement", "200")
+
 
     # charger tweets
     rTransaction.set("transaction.1.donneur", "Benjamin")
@@ -61,7 +65,64 @@ def charger_donnees():
 
     return "Le chargement des données à réussi."
 
+@app.route("/enregisterTransaction", methods=['POST'])
+def enregistrer_transaction():
 
+
+    #  curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"donneur\":\"Benjamin\", \"receveur\":\"Clement\", \"valeur\":\"100\"}" http://localhost:5000/enregisterTransaction
+
+    data = request.get_json()
+    donneur = data.get("donneur")
+    receveur = data.get("receveur")
+    valeur = data.get('valeur')
+ 
+
+
+    #on ajoute la transaction 
+    rTransaction.set("transaction." + str(rTransaction.dbsize()+1) + ".donneur", donneur)
+    rTransaction.set("transaction." + str(rTransaction.dbsize()+1) + ".receveur", receveur)
+    rTransaction.set("transaction." + str(rTransaction.dbsize() +1) + ".valeur", valeur)
+    
+    
+    #mise a jour du solde du donneur
+    solde_donneur = int(rUser.get("solde." + donneur))
+    solde_donneur = solde_donneur - int(valeur)
+    rUser.set("solde." + donneur, str(solde_donneur))
+
+    #mise a jour du solde du receveur
+    solde_receveur = int(rUser.get("solde." + receveur))
+    solde_receveur = solde_receveur + int(valeur)
+    rUser.set("solde." + receveur, str(solde_receveur))
+
+    
+
+    return "La transaction a été enregistrée."
+
+
+@app.route("/getSolde", methods=['GET'])
+def get_solde():
+    """
+        Renvoie le solde d'un utilisateur
+
+        :return: le solde de l'utilisateur
+    """
+    # curl -X GET  http://localhost:5000/getSolde?nom=Benjamin
+
+    nom = request.args.get('nom')
+    return rUser.get("solde." + nom)
+
+    
+
+
+
+
+
+
+
+
+    
+
+    
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
