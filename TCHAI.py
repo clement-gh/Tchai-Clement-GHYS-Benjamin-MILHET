@@ -5,6 +5,7 @@ import sys
 import redis
 import json
 import hashlib
+import datetime
 
 from flask_cors import CORS
 
@@ -27,6 +28,8 @@ def get_all_users():
 
         :return: Un JSON contenant tous les utilisateurs
     """
+	# curl -X GET  http://127.0.0.1:5000/getAllUsers
+
     liste_res = []
     tmp = rUser.keys("nom.*")
     for i in range(len(tmp)):
@@ -52,7 +55,7 @@ def get_transactions():
     liste_transaction = list(set(liste_transaction))
 
     for j in range(len(liste_transaction)):
-        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
+        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"), date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
     return liste_res
 
 @app.route("/getTransactionsParPersonne", methods=['POST'])
@@ -91,6 +94,8 @@ def charger_donnees():
     """
     # curl -X GET http://localhost:5000/chargerDonnees
 
+    date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+
     # charger users
     rUser.set("nom.Benjamin", "Benjamin")
     rUser.set("transaction.Benjamin", json.dumps([1, 2]))
@@ -100,14 +105,15 @@ def charger_donnees():
     rUser.set("transaction.Clement", json.dumps([1, 2]))
     rUser.set("solde.Clement", "200")
 
-
     rTransaction.set("transaction.1.donneur", "Benjamin")
     rTransaction.set("transaction.1.receveur", "Clement")
     rTransaction.set("transaction.1.valeur", "100")
+    rTransaction.set("transaction.1.date", date)
 
     rTransaction.set("transaction.2.donneur", "Benjamin")
     rTransaction.set("transaction.2.receveur", "Clement")
     rTransaction.set("transaction.2.valeur", "300")
+    rTransaction.set("transaction.2.date", date)
 
     return "Le chargement des données à réussi."
 
@@ -121,6 +127,7 @@ def enregistrer_transaction():
     # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"donneur\":\"Benjamin\", \"receveur\":\"Clement\", \"valeur\":\"100\"}" http://localhost:5000/enregisterTransaction
 
     time_stamp = calendar.timegm(time.gmtime())
+    date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
     data = request.get_json()
     donneur = data.get("donneur")
@@ -152,7 +159,8 @@ def enregistrer_transaction():
     rTransaction.set("transaction." + str(time_stamp) + ".donneur", donneur)
     rTransaction.set("transaction." + str(time_stamp) + ".receveur", receveur)
     rTransaction.set("transaction." + str(time_stamp) + ".valeur", valeur)
-  
+    rTransaction.set("transaction." + str(time_stamp) + ".date", date)
+
     #mise a jour du solde du donneur
     solde_donneur = int(rUser.get("solde." + donneur))
     solde_donneur = solde_donneur - int(valeur)
