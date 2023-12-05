@@ -42,18 +42,13 @@ def get_transactions():
     """
     # curl -X GET  http://127.0.0.1:5000/getTransactions
 
-    liste_res = []
-    liste_users = get_all_users()
-    liste_transaction = []
-    for i in range(len(liste_users)):
-        if rUser.get(("transaction." + liste_users[i])) is not None:
-            for j in range(len(json.loads(rUser.get(("transaction." + liste_users[i]))))):
-                liste_transaction.append(json.loads(rUser.get(("transaction." + liste_users[i])))[j])
-    liste_transaction = list(set(liste_transaction))
+    liste_transaction, liste_res, = get_list_transaction()
 
     for j in range(len(liste_transaction)):
         liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
     return liste_res
+
+
 
 @app.route("/getTransactionsParPersonne", methods=['POST'])
 def get_transactions_par_personne():
@@ -125,7 +120,7 @@ def enregistrer_transaction():
     data = request.get_json()
     donneur = data.get("donneur")
     receveur = data.get("receveur")
-    valeur = data.get('valeur')
+    valeur = data.get("valeur")
 
     if rUser.get("nom." + donneur) is None:
         rUser.set("nom." + donneur, donneur)
@@ -152,6 +147,7 @@ def enregistrer_transaction():
     rTransaction.set("transaction." + str(time_stamp) + ".donneur", donneur)
     rTransaction.set("transaction." + str(time_stamp) + ".receveur", receveur)
     rTransaction.set("transaction." + str(time_stamp) + ".valeur", valeur)
+    rTransaction.set("transaction." + str(time_stamp) + ".hash", generer_hash(data))
   
     #mise a jour du solde du donneur
     solde_donneur = int(rUser.get("solde." + donneur))
@@ -178,17 +174,29 @@ def get_solde():
     nom = request.args.get('nom')
     return rUser.get("solde." + nom)
 
+
 def generer_hash(transaction):
     transaction_string = json.dumps(transaction, sort_keys=True).encode('utf-8')
     return hashlib.sha256(transaction_string).hexdigest()
+
+def get_list_transaction():
+    liste_res = []
+    liste_users = get_all_users()
+    liste_transaction = []
+    for i in range(len(liste_users)):
+        if rUser.get(("transaction." + liste_users[i])) is not None:
+            for j in range(len(json.loads(rUser.get(("transaction." + liste_users[i]))))):
+                liste_transaction.append(json.loads(rUser.get(("transaction." + liste_users[i])))[j])
+    liste_transaction = list(set(liste_transaction))
+    return liste_transaction, liste_res
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == "check_syntax":
             print("Build [ OK ]")
-            charger_donnees()
             exit(0)
         else:
             print("Passed argument not supported ! Supported argument : check_syntax")
             exit(1)
     app.run(debug=True)
+    charger_donnees()
