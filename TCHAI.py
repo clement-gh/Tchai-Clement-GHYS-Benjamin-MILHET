@@ -4,7 +4,6 @@ from flask import Flask, request
 import sys
 import redis
 import json
-import hashlib
 import datetime
 
 from flask_cors import CORS
@@ -186,9 +185,6 @@ def get_solde():
     nom = request.args.get('nom')
     return rUser.get("solde." + nom)
 
-def generer_hash(transaction):
-    transaction_string = json.dumps(transaction, sort_keys=True).encode('utf-8')
-    return hashlib.sha256(transaction_string).hexdigest()
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
