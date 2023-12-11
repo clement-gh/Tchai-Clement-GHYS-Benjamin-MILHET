@@ -110,7 +110,7 @@ def charger_donnees():
     rTransaction.set("transaction.2.receveur", "Clement")
     rTransaction.set("transaction.2.valeur", "300")
     rTransaction.set("transaction.2.date", date)
-    rTransaction.set("transaction.2.hash ", generer_hash(donneur="Benjamin", receveur="Clement", valeur="300",date=date))
+    rTransaction.set("transaction.2.hash", generer_hash(donneur="Benjamin", receveur="Clement", valeur="300",date=date))
 
 
     return "Le chargement des données à réussi."
@@ -204,6 +204,7 @@ def verifier_transactions():
 
 
 
+
 def generer_hash(donneur, receveur, valeur, date):
     """
         Permet de générer un hash pour une transaction
@@ -227,6 +228,12 @@ def get_list_transaction():
     liste_transaction = list(set(liste_transaction))
     return liste_transaction, liste_res
 
+def verifier_une_transaction(transaction):
+    hash = generer_hash(donneur=rTransaction.get("transaction." + str(transaction) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"), date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date"))
+    if hash != rTransaction.get("transaction." + str(transaction) + ".hash"):
+        return False
+    return True
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == "check_syntax":
@@ -236,4 +243,3 @@ if __name__ == '__main__':
             print("Passed argument not supported ! Supported argument : check_syntax")
             exit(1)
     app.run(debug=True)
-    charger_donnees()
