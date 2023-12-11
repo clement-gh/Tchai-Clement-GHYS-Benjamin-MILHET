@@ -117,7 +117,7 @@ def charger_donnees():
     rTransaction.set("transaction.2.receveur", "Clement")
     rTransaction.set("transaction.2.valeur", "300")
     rTransaction.set("transaction.2.date", date)
-    rTransaction.set("transaction.2.hash", generer_hash(donneur="Benjamin", receveur="Clement", valeur="300",date=date, hash_precedent=get_last_hash()))
+    rTransaction.set("transaction.2.hash", generer_hash(donneur="Benjamin", receveur="Clement", valeur="300",date=date))
 
 
     #return "Le chargement des données à réussi."
@@ -237,7 +237,7 @@ def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
         :param: valeur
         :param: date
     """
-    hash= hashlib.sha256( (donneur + receveur + valeur + date + hash_precedent).encode('utf-8') ).hexdigest()
+    hash = hashlib.sha256((donneur + receveur + valeur + date + hash_precedent).encode('utf-8') ).hexdigest()
     return hash
 
 def get_list_transaction():
