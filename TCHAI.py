@@ -45,7 +45,8 @@ def get_transactions():
     """
     # curl -X GET  http://127.0.0.1:5000/getTransactions
 
-    liste_transaction, liste_res, = get_list_transaction()
+    liste_res = []
+    liste_transaction, = get_list_transaction()
 
     for j in range(len(liste_transaction)):
         liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"), date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
@@ -226,7 +227,6 @@ def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
     return hash
 
 def get_list_transaction():
-    liste_res = []
     liste_users = get_all_users()
     liste_transaction = []
     for i in range(len(liste_users)):
@@ -234,7 +234,7 @@ def get_list_transaction():
             for j in range(len(json.loads(rUser.get(("transaction." + liste_users[i]))))):
                 liste_transaction.append(json.loads(rUser.get(("transaction." + liste_users[i])))[j])
     liste_transaction = list(set(liste_transaction))
-    return liste_transaction, liste_res
+    return liste_transaction
 
 def verifier_une_transaction(transaction):
     hash = generer_hash(donneur=rTransaction.get("transaction." + str(transaction) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"), date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date"))
