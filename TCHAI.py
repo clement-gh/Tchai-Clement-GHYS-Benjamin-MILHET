@@ -237,7 +237,7 @@ def get_list_transaction():
     return liste_transaction
 
 def verifier_une_transaction(transaction):
-    hash = generer_hash(donneur=rTransaction.get("transaction." + str(transaction) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"), date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date"))
+    hash = generer_hash(donneur=rTransaction.get("transaction." + str(transaction) + ".donneur"), receveur=rTransaction.get("transaction." + str(transaction) + ".receveur"), valeur=rTransaction.get("transaction." + str(transaction) + ".valeur"), date=rTransaction.get("transaction." + str(transaction) + ".date"))
     if hash != rTransaction.get("transaction." + str(transaction) + ".hash"):
         return False
     return True
