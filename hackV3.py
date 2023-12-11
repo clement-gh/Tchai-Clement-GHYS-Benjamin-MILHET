@@ -12,7 +12,6 @@ listeTransaction = rTransaction.keys("transaction.*")
 listeTransaction.sort()
 
 last_transaction = listeTransaction[-1].split(".")[1]
-print(rTransaction.keys("transaction." + last_transaction + ".*"))
 
 donneur = "jean"
 receveur = "pierre"
