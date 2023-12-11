@@ -7,6 +7,7 @@ import json
 import hashlib
 import datetime
 
+
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -46,10 +47,14 @@ def get_transactions():
     # curl -X GET  http://127.0.0.1:5000/getTransactions
 
     liste_res = []
-    liste_transaction, = get_list_transaction()
+    liste_transaction = get_list_transaction()
 
     for j in range(len(liste_transaction)):
-        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"), date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
+        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
+        receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
+        valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
+        date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date"),
+        hash=rTransaction.get("transaction." + str(liste_transaction[j]) + ".hash")))
     return liste_res
 
 
@@ -106,7 +111,7 @@ def charger_donnees():
     rTransaction.set("transaction.1.receveur", "Clement")
     rTransaction.set("transaction.1.valeur", "100")
     rTransaction.set("transaction.1.date", date)
-    rTransaction.set("transaction.1.hash", generer_hash(donneur="Benjamin", receveur="Clement", valeur="100",date=date))
+    rTransaction.set("transaction.1.hash", generer_hash(donneur="Benjamin", receveur="Clement", valeur="100",date=date ))
 
     rTransaction.set("transaction.2.donneur", "Benjamin")
     rTransaction.set("transaction.2.receveur", "Clement")
@@ -115,7 +120,8 @@ def charger_donnees():
     rTransaction.set("transaction.2.hash", generer_hash(donneur="Benjamin", receveur="Clement", valeur="300",date=date, hash_precedent=get_last_hash()))
 
 
-    return "Le chargement des données à réussi."
+    #return "Le chargement des données à réussi."
+    return rTransaction.get("transaction.2.hash")
 
 @app.route("/enregisterTransaction", methods=['POST'])
 def enregistrer_transaction():
@@ -196,19 +202,27 @@ def verifier_transactions():
     """
     # curl -X GET  http://localhost:5000/verifierTransactions
 
-    liste_transaction, _ = get_list_transaction()
+    liste_transaction = get_list_transaction()
     
+
     # pour les élement de la liste des transactions à partir du 2eme
-    for j in range(1, len(liste_transaction)):
+    
+
+    for j in range( len(liste_transaction)):
+        if j == 0:
+            hash_precedent=""
+        else:
+            hash_precedent=get_last_hash()
 
         hash = generer_hash(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
         receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
         valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
         date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date"),
-        hash_precedent=rTransaction.get("transaction." + str(liste_transaction[j-1]) + ".hash"))
+        hash_precedent=hash_precedent)
 
         if hash != rTransaction.get("transaction." + str(liste_transaction[j]) + ".hash"):
-            return "La transaction " + str(liste_transaction[j]) + " n'est pas valide."
+            #return "La transaction " + str(liste_transaction[j]) + " n'est pas valide."
+            return str(hash) + " " + str(rTransaction.get("transaction." + str(liste_transaction[j]) + ".hash"))
     return "Toutes les transactions sont valides."
 
 
@@ -242,9 +256,13 @@ def verifier_une_transaction(transaction):
         return False
     return True
 
+# curl -X GET  http://localhost:5000/getLastHash
+#@app.route("/getLastHash", methods=['GET'])
 def get_last_hash():
-    liste_transaction, _ = get_list_transaction()
-    return rTransaction.get("transaction." + str(liste_transaction[len(liste_transaction)-1]) + ".hash")
+    
+    liste_transaction = get_list_transaction()
+    previous_hash = rTransaction.get("transaction." + str(liste_transaction[-1]) + ".hash")
+    return str(previous_hash)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
