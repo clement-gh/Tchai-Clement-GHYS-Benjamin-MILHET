@@ -75,9 +75,10 @@ def get_transactions_par_personne():
     liste_transaction = list(set(liste_transaction))
 
     for j in range(len(liste_transaction)):
-        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
-                              receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
-                              valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
+        if verifier_une_transaction(liste_transaction[j]):
+            liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
+                            receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
+                            valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
     return liste_res
 
 @app.route("/chargerDonnees", methods=['GET'])
