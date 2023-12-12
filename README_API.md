@@ -25,6 +25,7 @@ Redis
 ## Fonctionnalités
 
  - [Récupération de l'ensemble des transactions](#récupération-de-lensemble-des-transactions)
+ - [Récupération des transactions pour une personne](#récupération-des-transactions-pour-une-personne)
 
 ### Récupération de l'ensemble des transactions
 
@@ -49,4 +50,37 @@ Retourne l'ensemble des transactions sous ce format :
 
 ```
 curl -X GET  http://127.0.0.1:5000/getTransactions
+```
+
+### Récupération des transactions pour une personne
+
+Permet de récupérer l'ensemble des transaction stocker dans la base de données REDIS pour une personne.
+
+#### Données envoyées
+
+Méthode : POST
+
+```
+{
+    "nom": "Nom de l'utilisateur",
+}
+```
+
+#### Données reçues
+
+Retourne l'ensemble des transactions sous ce format : 
+
+```
+{
+  "date":"12/12/2023, 15:20:06",
+  "donneur":"Benjamin",
+  "receveur":"Clement",
+  "valeur":"100"
+}
+```
+
+#### Exemple de requête
+
+```
+curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"nom\":\"Benjamin\"}" http://localhost:5000/getTransactionsParPersonne
 ```
