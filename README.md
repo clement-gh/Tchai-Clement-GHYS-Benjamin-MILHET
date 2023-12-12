@@ -1,6 +1,7 @@
 # TCHAI
 
 ## TCHAI V2
+L'amélioration principale de cette version est l'ajout de la fonction de hashage. En effet, dans cette nouvelle version, nous ajoutons un hash dans chaque transaction. Cela permet de vérifier l'intégrité de la transaction.
 
 <img src="https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue" /> <img src="https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white" /> <img src="https://img.shields.io/badge/redis-%23DD0031.svg?&style=for-the-badge&logo=redis&logoColor=white" /> <img src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white" /> <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" />
 
