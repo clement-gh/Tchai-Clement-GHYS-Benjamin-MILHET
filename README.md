@@ -53,6 +53,9 @@ Redis
 │   └── transaction.id.hash : Hash de sécurité pour la transaction (String)
 ```
 
+### Script HACKV3
+Le script HACKV3.py permet d'ajouter une nouvelle transaction directement dans la base de données REDIS. Cette transaction utilise le hash de la transaction précédente pour vérifier l'intégrité de la transaction précédente et ainsi de l'ensemble des transactions. Elle n'est pas frauduleuse car la fonction de vérification de hash est toujours valide. Pour contrer cela, nous devons ajouter un système de cryptographie asymétrique.
+
 ### Release
  - [Lien vers la release](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/releases/tag/V3)
  - [Lien vers la branche](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/tree/tchaiV3)
