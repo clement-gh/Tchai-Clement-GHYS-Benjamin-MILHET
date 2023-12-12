@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 import base64
+import os
 
 import requests
 
@@ -38,16 +39,16 @@ def generate_keys():
 
 
 
-def sign_transaction(private_key, data):
+def sign_transaction(private_key, transaction_data):
     signature = private_key.sign(
-        data.encode(),
+        transaction_data.encode('utf-8'),  # Assurez-vous que les données sont encodées en bytes
         padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()),
             salt_length=padding.PSS.MAX_LENGTH
         ),
         hashes.SHA256()
     )
-    return base64.urlsafe_b64encode(signature).decode()
+    return signature
 
 def convert_public_key_to_pem(public_key):
     pem = public_key.public_bytes(
@@ -58,6 +59,12 @@ def convert_public_key_to_pem(public_key):
 
 
 def register_keys(private_key, public_key):
+    '''
+    if (os.path.exists("private_key.pem")):
+        os.remove("private_key.pem")
+    if (os.path.exists("public_key.pem")):
+        os.remove("public_key.pem")
+    '''
     with open("private_key.pem", "wb") as f:
         f.write(private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
@@ -75,9 +82,9 @@ def create_user():
     # input username and solde
     username = input("Enter your username: ")
     solde = input("Enter your solde: ")
-    register_keys(
-        generate_keys()[0],generate_keys()[1]
-    )
+    pi,pu=generate_keys()
+    register_keys(pi,pu)
+    # load public key
     path = "public_key.pem"
     with open(path, "rb") as f:
         public_key = load_pem_public_key(f.read(), backend=default_backend())
@@ -93,15 +100,15 @@ def create_user():
 def create_transaction():
     # input username and solde
     username = input("Enter your username: ")
-    receveur = input("Enter the username of the receveur: ")
-    valeur= input("Enter the amount: ")
     donneur = input("Enter the username of the donneur: ")
-
+    valeur= input("Enter the amount: ")
+    receveur = input("Enter the username of the receveur: ")
     # sign transaction
-    private_key = load_pem_private_key(open("private_key.pem", "rb").read(), None, default_backend())
-    data = username + receveur + valeur + donneur
-    signature = sign_transaction(private_key, data)
+    private_key= load_pem_private_key(open("private_key.pem", "rb").read(), password=None)
 
+    data = username + donneur + receveur + valeur
+    signature = sign_transaction(private_key, data)
+    encoded_signature = base64.b64encode(signature).decode('utf-8')
     # send data to server
     url = 'http://localhost:5000/enregisterTransaction'
     donnees = {
@@ -109,7 +116,7 @@ def create_transaction():
         'receveur': receveur,
         'valeur': valeur,
         'donneur': donneur,
-        'signature': signature
+        'signature': encoded_signature
     }
 
     try:
@@ -121,8 +128,6 @@ def create_transaction():
             print(reponse.text)
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la requête : {e}")
-
-
 # main
 if __name__ == "__main__":
     while True:
@@ -138,7 +143,3 @@ if __name__ == "__main__":
             break
         else:
             print("Invalid choice !")
-
-
-
-

@@ -156,18 +156,23 @@ def enregistrer_transaction():
     receveur = data.get("receveur")
     valeur = data.get("valeur")
     signature = data.get("signature")
+    decoded_signature = base64.b64decode(signature.encode('utf-8'))
 
     user =  data.get("user")
-    if user is None:
-        return "user is None",400
-    if not verify_key(user, donneur + receveur + valeur, signature):
-        return "verification de la clef publique a echoue",400 #probleme de clef publique !!!
-
-
+    user_public_key = rUser.get("public_key." + user)
+    user_public_key = load_pem_public_key(user_public_key.encode('utf-8'))
     if rUser.get("nom." + donneur) is None:
         return "Le donneur n'existe pas.", 400
     if rUser.get("nom." + receveur) is None:
         return "Le receveur n'existe pas.", 400
+
+    if user is None:
+        return "user is None",400
+    if not verify_key(user_public_key,user + donneur + receveur + valeur,  decoded_signature):
+        return "verification de la clef publi a echoue",400 #probleme de clef publique !!!
+
+
+    
 
 
     liste_transaction_donneur = json.loads(rUser.get("transaction." + donneur))
@@ -303,7 +308,7 @@ def verify_key(public_key, transaction_data, signature):
     try:
         public_key.verify(
             signature,
-            transaction_data.encode('utf-8'),
+            transaction_data.encode('utf-8'),  # Assurez-vous que les données sont encodées en bytes
             padding.PSS(
                 mgf=padding.MGF1(hashes.SHA256()),
                 salt_length=padding.PSS.MAX_LENGTH
@@ -313,7 +318,7 @@ def verify_key(public_key, transaction_data, signature):
         return True
     except Exception as e:
         print("Verification failed:", e)
-        return False
+        return  e
 
 
 @app.route("/register", methods=['POST'])
