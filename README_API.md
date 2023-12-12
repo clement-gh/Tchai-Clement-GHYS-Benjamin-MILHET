@@ -26,6 +26,7 @@ Redis
 
  - [Récupération de l'ensemble des transactions](#récupération-de-lensemble-des-transactions)
  - [Récupération des transactions pour une personne](#récupération-des-transactions-pour-une-personne)
+ - [Enregistrement d'une nouvelle transaction](#enregistrement-dune-nouvelle-transaction)
 
 ### Récupération de l'ensemble des transactions
 
@@ -39,10 +40,10 @@ Retourne l'ensemble des transactions sous ce format :
 
 ```
 {
-  "date":"12/12/2023, 15:20:06",
-  "donneur":"Benjamin",
-  "receveur":"Clement",
-  "valeur":"100"
+    "date":"12/12/2023, 15:20:06",
+    "donneur":"Benjamin",
+    "receveur":"Clement",
+    "valeur":"100"
 }
 ```
 
@@ -72,10 +73,10 @@ Retourne l'ensemble des transactions sous ce format :
 
 ```
 {
-  "date":"12/12/2023, 15:20:06",
-  "donneur":"Benjamin",
-  "receveur":"Clement",
-  "valeur":"100"
+    "date":"12/12/2023, 15:20:06",
+    "donneur":"Benjamin",
+    "receveur":"Clement",
+    "valeur":"100"
 }
 ```
 
@@ -83,4 +84,38 @@ Retourne l'ensemble des transactions sous ce format :
 
 ```
 curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"nom\":\"Benjamin\"}" http://localhost:5000/getTransactionsParPersonne
+```
+
+### Enregistrement d'une nouvelle transaction
+
+Permet d'enregistrer une nouvelle transaction.
+
+#### Données envoyées
+
+Méthode : POST
+
+```
+{
+    "donneur": "Nom du donneur",
+    "receveur": "Nom du receveur",
+    "valeur": "Valeur de la transaction",
+    "date": "Date et heure de la transaction",
+    "hash": "Hash pour la sécurité de la transaction",
+}
+```
+
+#### Données reçues
+
+```
+     message : "La transaction a été enregistrée."
+
+ou
+
+     message : "La dernière transaction n'est pas valide."
+```
+
+#### Exemple de requête
+
+```
+curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"donneur\":\"Benjamin\", \"receveur\":\"Clement\", \"valeur\":\"100\"}" http://localhost:5000/enregisterTransaction
 ```
