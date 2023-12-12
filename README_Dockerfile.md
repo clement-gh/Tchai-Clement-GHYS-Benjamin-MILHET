@@ -1,10 +1,8 @@
-# Redbird
+# TCHAI
 
 ## Membres du groupe
  - Clément GHYS
  - Benjamin MILHET
- 
-## ILC
 
 ### Documentation du fichier Dockerfile
 
