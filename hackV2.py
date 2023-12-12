@@ -16,3 +16,5 @@ for i in rUser.keys("transaction.*"):
     if int(transaction.split(".")[1]) in tmp:
         tmp.remove(int(transaction.split(".")[1]))
         rUser.set(i, json.dumps(tmp))
+
+print("Transaction " + transaction.split(".")[1] + " supprimée")
