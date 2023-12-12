@@ -5,6 +5,7 @@ RUN apt-get install python3-pip -y
 RUN pip install Flask
 RUN pip install redis
 RUN pip install flask-cors
+RUN pip install cryptography
 
 ENV FLASK_APP=TCHAI.py
 ENV FLASK_ENV=development

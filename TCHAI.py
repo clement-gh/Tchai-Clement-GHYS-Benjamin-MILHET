@@ -1,11 +1,17 @@
 import calendar
 import time
+
 from flask import Flask, request
 import sys
 import redis
 import json
 import hashlib
 import datetime
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
 
 from flask_cors import CORS
 
@@ -272,6 +278,74 @@ def get_last_hash():
     liste_transaction = get_list_transaction()
     previous_hash = rTransaction.get("transaction." + str(liste_transaction[-2]) + ".hash")
     return str(previous_hash)
+
+
+
+def generate_keys():
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+        backend=default_backend()
+    )
+    public_key = private_key.public_key()
+    # convert private key to pem format
+    pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    ).decode("utf-8")
+    # convert public key to pem format
+    pem2 = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    ).decode("utf-8")
+    return pem, pem2
+
+def convert_key_in_pem(key):
+    pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    ).decode("utf-8")
+    return pem
+
+def verify_transaction(public_key, transaction_data, signature):
+    try:
+        public_key.verify(
+            signature,
+            transaction_data.encode('utf-8'),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+        return True
+    except Exception as e:
+        print("Verification failed:", e)
+        return False
+
+@app.route("/generateKeys", methods=['POST'])
+def generate_keys_route():
+    """
+        Permet de générer une paire de clé privée/publique
+
+        :return: Un JSON contenant la clé publique
+    """
+    # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"user\":\"Benjamin\"}" http://localhost:5000/generateKeys
+    data = request.get_json()
+    user = data.get("user")
+    private_key, public_key = generate_keys()
+    if rUser.get("nom." + user) is None:
+        rUser.set("nom." + user, user)
+        rUser.set("transaction." + user, json.dumps([]))
+        rUser.set("solde." + user, "0")
+        rUser.set("public_key." + user, public_key)
+    else:
+        rUser.set("public_key." + user, public_key)
+    return private_key
+
+
 
 
 if __name__ == '__main__':
