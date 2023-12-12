@@ -31,7 +31,7 @@ Cette API développée en python a pour but de pouvoir gérer des transactions e
  - Afficher une liste des transactions dans l’ordre chronologique liées à une personne.
  - Afficher le solde du compte de la personne.
  - Charger des données comprenant deux personnes et deux transactions.
- - Vérification des transactions grâce à un hashage SHA-256.
+ - Vérification des transactions grâce à un hashage SHA-256 et basé sur le hash de la transaction précédente.
  - Utilisation de la cryptographie asymétrique afin d’assurer l’authenticité de l’expéditeur.
 
 ## Langages
@@ -41,3 +41,4 @@ Pour réaliser notre API, nous avons utiliser le langage Python avec le framewor
 
  - [Readme de l'API](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/blob/main/README_API.md)
  - [Documentation du Dockerfile](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/blob/main/README_Dockerfile.md)
+ - [TCHAI V1](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/blob/main/README_TCHAI_V1.md)
