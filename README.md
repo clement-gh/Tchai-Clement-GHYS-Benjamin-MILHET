@@ -22,3 +22,22 @@ docker-compose build
 ```
 docker-compose up
 ```
+
+## Fonctionnalités:
+Cette API développée en python a pour but de pouvoir gérer des transactions entre des personnes. 
+
+ - Enregistrer une transaction.
+ - Afficher une liste de toutes les transactions dans l’ordre chronologique.
+ - Afficher une liste des transactions dans l’ordre chronologique liées à une personne.
+ - Afficher le solde du compte de la personne.
+ - Charger des données comprenant deux personnes et deux transactions.
+ - Vérification des transactions grâce à un hashage SHA-256.
+ - Utilisation de la cryptographie asymétrique afin d’assurer l’authenticité de l’expéditeur.
+
+## Langages
+Pour réaliser notre API, nous avons utiliser le langage Python avec le framework Flask permettant le dévelopement web avec Python. Pour le stockage des données, nous utilisons le système de gestion de base de données clé-valeur Redis qui est de type NoSQL.
+
+## Documentations
+
+ - [Readme de l'API](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/blob/main/README_API.md)
+ - [Documentation du Dockerfile](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/blob/main/README_Dockerfile.md)
