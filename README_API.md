@@ -27,6 +27,8 @@ Redis
  - [Récupération de l'ensemble des transactions](#récupération-de-lensemble-des-transactions)
  - [Récupération des transactions pour une personne](#récupération-des-transactions-pour-une-personne)
  - [Enregistrement d'une nouvelle transaction](#enregistrement-dune-nouvelle-transaction)
+ - [Récupération du solde d'une personne](#récupération-du-solde-dune-personne)
+ - [Vérification de l'ensemble des transactions](#vérification-de-lensemble-des-transactions)
 
 ### Récupération de l'ensemble des transactions
 
@@ -107,15 +109,67 @@ Méthode : POST
 #### Données reçues
 
 ```
-     message : "La transaction a été enregistrée."
+message : "La transaction a été enregistrée."
 
 ou
 
-     message : "La dernière transaction n'est pas valide."
+message : "La dernière transaction n'est pas valide."
 ```
 
 #### Exemple de requête
 
 ```
 curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"donneur\":\"Benjamin\", \"receveur\":\"Clement\", \"valeur\":\"100\"}" http://localhost:5000/enregisterTransaction
+```
+
+### Récupération du solde d'une personne
+
+Permet de récupérer le solde d'une personne.
+
+#### Données envoyées
+
+Méthode : POST
+
+```
+{
+    "nom": "Nom de l'utilisateur",
+}
+```
+
+#### Données reçues
+
+Retourne le solde de la personne sous ce format :
+
+```
+message : 100
+```
+
+#### Exemple de requête
+
+```
+curl -X GET  http://localhost:5000/getSolde?nom=Benjamin
+```
+
+### Vérification de l'ensemble des transactions
+
+Permet de vérifier l'ensemble des transactions.
+
+#### Données reçues
+
+Méthode : GET
+
+Retourne l'ensemble des transactions sous ce format : 
+
+```
+message : "Toutes les transactions sont valides."
+
+ou
+
+message : "La transaction id n'est pas valide."
+```
+
+#### Exemple de requête
+
+```
+curl -X GET  http://localhost:5000/verifierTransactions
 ```
