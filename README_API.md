@@ -47,6 +47,7 @@ Retourne l'ensemble des transactions sous ce format :
     "receveur":"Clement",
     "valeur":"100"
 }
+status : 200
 ```
 
 #### Exemple de requête
@@ -80,6 +81,7 @@ Retourne l'ensemble des transactions sous ce format :
     "receveur":"Clement",
     "valeur":"100"
 }
+status : 200
 ```
 
 #### Exemple de requête
@@ -110,10 +112,12 @@ Méthode : POST
 
 ```
 message : "La transaction a été enregistrée."
+status : 200
 
 ou
 
 message : "La dernière transaction n'est pas valide."
+status : 400
 ```
 
 #### Exemple de requête
@@ -142,6 +146,7 @@ Retourne le solde de la personne sous ce format :
 
 ```
 message : 100
+status : 200
 ```
 
 #### Exemple de requête
@@ -162,10 +167,12 @@ Retourne l'ensemble des transactions sous ce format :
 
 ```
 message : "Toutes les transactions sont valides."
+status : 200
 
 ou
 
 message : "La transaction id n'est pas valide."
+status : 400
 ```
 
 #### Exemple de requête

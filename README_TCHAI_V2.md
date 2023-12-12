@@ -33,6 +33,9 @@ Redis
 │   └── transaction.id.hash : Hash de sécurité pour la transaction (String)
 ```
 
+### Script HACKV2
+Le script HACKV2.py permet de supprimer aléatoirement une transaction dans la base de données REDIS. Cette transaction est supprimée de la base de données et aussi de la liste des transactions de l'utilisateur. Le fait de supprimer une transaction de la base de données et de la liste des transactions de l'utilisateur permet de ne pas détecter la fraude. En effet, la fonction de vérification de hash est toujours valide.
+
 ### Release
  - [Lien vers la release](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/releases/tag/V2)
  - [Lien vers la branche](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/tree/tchaiV2)

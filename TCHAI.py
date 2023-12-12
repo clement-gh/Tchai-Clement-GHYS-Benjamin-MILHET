@@ -19,7 +19,7 @@ rTransaction = redis.Redis(host='TCHAI_redis', port=6379, db=1, decode_responses
 
 @app.route("/")
 def hello_world():
-    return "Hello, world!"
+    return "Hello, world!", 200
 
 
 @app.route("/getAllUsers", methods=['GET'])
@@ -35,7 +35,7 @@ def get_all_users():
     tmp = rUser.keys("nom.*")
     for i in range(len(tmp)):
         liste_res.append(tmp[i][4:])
-    return liste_res
+    return liste_res, 200
 
 
 @app.route("/getTransactions", methods=['GET'])
@@ -58,7 +58,7 @@ def get_transactions():
                                       valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
                                       date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
             else:
-                return "La transaction " + str(liste_transaction[j]) + " n'est pas valide."
+                return "La transaction " + str(liste_transaction[j]) + " n'est pas valide.", 400
         else:
             if verifier_une_transaction(liste_transaction[j], liste_transaction[j - 1]):
                 liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
@@ -66,8 +66,8 @@ def get_transactions():
                                       valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
                                       date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
             else:
-                return "La transaction " + str(liste_transaction[j]) + " n'est pas valide."
-    return liste_res
+                return "La transaction " + str(liste_transaction[j]) + " n'est pas valide.", 400
+    return liste_res, 200
 
 
 @app.route("/getTransactionsParPersonne", methods=['POST'])
@@ -95,7 +95,7 @@ def get_transactions_par_personne():
         liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
                               receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
                               valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
-    return liste_res
+    return liste_res, 200
 
 
 @app.route("/chargerDonnees", methods=['GET'])
@@ -136,7 +136,7 @@ def charger_donnees():
                                   valeur=300, date=date,
                                   hash_precedent=rTransaction.get("transaction.1.hash")))
 
-    return "Le chargement des données à réussi."
+    return "Le chargement des données à réussi.", 200
 
 
 @app.route("/enregisterTransaction", methods=['POST'])
@@ -149,7 +149,7 @@ def enregistrer_transaction():
     # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"donneur\":\"Benjamin\", \"receveur\":\"Clement\", \"valeur\":\"100\"}" http://localhost:5000/enregisterTransaction
 
     if not verifier_une_transaction(get_list_transaction()[-1], get_list_transaction()[-2]):
-        return "La dernière transaction n'est pas valide."
+        return "La dernière transaction n'est pas valide.", 400
 
     time_stamp = calendar.timegm(time.gmtime())
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
@@ -203,7 +203,7 @@ def enregistrer_transaction():
     solde_receveur = solde_receveur + int(valeur)
     rUser.set("solde." + receveur, solde_receveur)
 
-    return "La transaction a été enregistrée."
+    return "La transaction a été enregistrée.", 200
 
 
 @app.route("/getSolde", methods=['GET'])
@@ -216,7 +216,7 @@ def get_solde():
     # curl -X GET  http://localhost:5000/getSolde?nom=Benjamin
 
     nom = request.args.get('nom')
-    return rUser.get("solde." + nom)
+    return rUser.get("solde." + nom), 200
 
 
 @app.route("/verifierTransactions", methods=['GET'])
@@ -243,9 +243,9 @@ def verifier_transactions():
                                      hash_precedent=hash_precedent)
 
         if calculed_hash != rTransaction.get("transaction." + str(liste_transaction[j]) + ".hash"):
-            return "La transaction " + str(liste_transaction[j]) + " n'est pas valide."
+            return "La transaction " + str(liste_transaction[j]) + " n'est pas valide.", 400
 
-    return "Toutes les transactions sont valides."
+    return "Toutes les transactions sont valides.", 200
 
 
 def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
