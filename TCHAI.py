@@ -7,10 +7,15 @@ import redis
 import json
 import hashlib
 import datetime
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
+import base64
 from cryptography.hazmat.primitives import serialization
 
 from flask_cors import CORS
@@ -145,20 +150,25 @@ def enregistrer_transaction():
     time_stamp = calendar.timegm(time.gmtime())
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
+
     data = request.get_json()
     donneur = data.get("donneur")
     receveur = data.get("receveur")
     valeur = data.get("valeur")
+    signature = data.get("signature")
+
+    user =  data.get("user")
+    if user is None:
+        return "user is None",400
+    if not verify_key(user, donneur + receveur + valeur, signature):
+        return "verification de la clef publique a echoue",400 #probleme de clef publique !!!
+
 
     if rUser.get("nom." + donneur) is None:
-        rUser.set("nom." + donneur, donneur)
-        rUser.set("transaction." + donneur, json.dumps([]))
-        rUser.set("solde." + donneur, "0")
-
+        return "Le donneur n'existe pas.", 400
     if rUser.get("nom." + receveur) is None:
-        rUser.set("nom." + receveur, receveur)
-        rUser.set("transaction." + receveur, json.dumps([]))
-        rUser.set("solde." + receveur, "0")
+        return "Le receveur n'existe pas.", 400
+
 
     liste_transaction_donneur = json.loads(rUser.get("transaction." + donneur))
     liste_transactin_receveur = json.loads(rUser.get("transaction." + receveur))
@@ -194,7 +204,7 @@ def enregistrer_transaction():
     solde_receveur = solde_receveur + int(valeur)
     rUser.set("solde." + receveur, str(solde_receveur))
 
-    return "La transaction a été enregistrée."
+    return "La transaction a été enregistrée.", 200
 
 
 @app.route("/getSolde", methods=['GET'])
@@ -251,6 +261,12 @@ def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
     genered_hash = hashlib.sha256((donneur + receveur + valeur + date + hash_precedent).encode('utf-8')).hexdigest()
     return genered_hash
 
+def convert_public_key_to_pem(public_key):
+    pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    ).decode("utf-8")
+    return pem
 
 def get_list_transaction():
     liste_users = get_all_users()
@@ -281,29 +297,9 @@ def get_last_hash():
 
 
 
-def generate_keys():
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
-    public_key = private_key.public_key()
-    # convert private key to pem format
-    pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
-    ).decode("utf-8")
-    # convert public key to pem format
-    pem2 = public_key.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
-    ).decode("utf-8")
-    return pem, pem2
 
 
-
-def verify_transaction(public_key, transaction_data, signature):
+def verify_key(public_key, transaction_data, signature):
     try:
         public_key.verify(
             signature,
@@ -320,17 +316,17 @@ def verify_transaction(public_key, transaction_data, signature):
         return False
 
 
-
-
 @app.route("/register", methods=['POST'])
 def register():
     data = request.get_json()
     nom = data.get('nom')
     solde = data.get('solde')
+    key = data.get('cle_publique')
     if rUser.get("nom." + nom) is None:
         rUser.set("nom." + nom, nom)
         rUser.set("transaction." + nom, json.dumps([]))
         rUser.set("solde." + nom, solde)
+        rUser.set("public_key." + nom, key)
         return "L'utilisateur a été enregistré.", 200
     else:
         return "L'utilisateur existe déjà.", 400
