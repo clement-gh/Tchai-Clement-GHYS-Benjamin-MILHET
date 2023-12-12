@@ -51,10 +51,22 @@ def get_transactions():
     liste_transaction = get_list_transaction()
 
     for j in range(len(liste_transaction)):
-        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
-                              receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
-                              valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
-                              date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
+        if j == 0:
+            if verifier_une_transaction(liste_transaction[j]):
+                liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
+                                      receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
+                                      valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
+                                      date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
+            else:
+                return "La transaction " + str(liste_transaction[j]) + " n'est pas valide."
+        else:
+            if verifier_une_transaction(liste_transaction[j], liste_transaction[j - 1]):
+                liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
+                                      receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
+                                      valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
+                                      date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
+            else:
+                return "La transaction " + str(liste_transaction[j]) + " n'est pas valide."
     return liste_res
 
 
@@ -80,10 +92,9 @@ def get_transactions_par_personne():
     liste_transaction = list(set(liste_transaction))
 
     for j in range(len(liste_transaction)):
-        if verifier_une_transaction(liste_transaction[j]):
-            liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
-                                  receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
-                                  valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
+        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
+                              receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
+                              valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
     return liste_res
 
 
@@ -97,31 +108,32 @@ def charger_donnees():
     # curl -X GET http://localhost:5000/chargerDonnees
 
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+    time_stamp = calendar.timegm(time.gmtime())
 
     # charger users
     rUser.set("nom.Benjamin", "Benjamin")
-    rUser.set("transaction.Benjamin", json.dumps([1, 2]))
-    rUser.set("solde.Benjamin", "400")
+    rUser.set("transaction.Benjamin", json.dumps([1, time_stamp]))
+    rUser.set("solde.Benjamin", 400)
 
     rUser.set("nom.Clement", "Clement")
-    rUser.set("transaction.Clement", json.dumps([1, 2]))
-    rUser.set("solde.Clement", "200")
+    rUser.set("transaction.Clement", json.dumps([1, time_stamp]))
+    rUser.set("solde.Clement", 200)
 
     rTransaction.set("transaction.1.donneur", "Benjamin")
     rTransaction.set("transaction.1.receveur", "Clement")
-    rTransaction.set("transaction.1.valeur", "100")
+    rTransaction.set("transaction.1.valeur", 100)
     rTransaction.set("transaction.1.date", date)
     rTransaction.set("transaction.1.hash",
-                     generer_hash(donneur="Benjamin", receveur="Clement", valeur="100", date=date))
+                     generer_hash(donneur="Benjamin", receveur="Clement", valeur=100, date=date))
 
-    rTransaction.set("transaction.2.donneur", "Benjamin")
-    rTransaction.set("transaction.2.receveur", "Clement")
-    rTransaction.set("transaction.2.valeur", "300")
-    rTransaction.set("transaction.2.date", date)
-    rTransaction.set("transaction.2.hash",
+    rTransaction.set("transaction." + str(time_stamp) + ".donneur", "Benjamin")
+    rTransaction.set("transaction." + str(time_stamp) + ".receveur", "Clement")
+    rTransaction.set("transaction." + str(time_stamp) + ".valeur", 300)
+    rTransaction.set("transaction." + str(time_stamp) + ".date", date)
+    rTransaction.set("transaction." + str(time_stamp) + ".hash",
                      generer_hash(donneur="Benjamin",
                                   receveur="Clement",
-                                  valeur="300", date=date,
+                                  valeur=300, date=date,
                                   hash_precedent=rTransaction.get("transaction.1.hash")))
 
     return "Le chargement des données à réussi."
@@ -135,6 +147,9 @@ def enregistrer_transaction():
         :return: Un JSON contenant le message de confirmation
     """
     # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"donneur\":\"Benjamin\", \"receveur\":\"Clement\", \"valeur\":\"100\"}" http://localhost:5000/enregisterTransaction
+
+    if not verifier_une_transaction(get_list_transaction()[-1], get_list_transaction()[-2]):
+        return "La dernière transaction n'est pas valide."
 
     time_stamp = calendar.timegm(time.gmtime())
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
@@ -181,12 +196,12 @@ def enregistrer_transaction():
     # mise a jour du solde du donneur
     solde_donneur = int(rUser.get("solde." + donneur))
     solde_donneur = solde_donneur - int(valeur)
-    rUser.set("solde." + donneur, str(solde_donneur))
+    rUser.set("solde." + donneur, solde_donneur)
 
     # mise a jour du solde du receveur
     solde_receveur = int(rUser.get("solde." + receveur))
     solde_receveur = solde_receveur + int(valeur)
-    rUser.set("solde." + receveur, str(solde_receveur))
+    rUser.set("solde." + receveur, solde_receveur)
 
     return "La transaction a été enregistrée."
 
@@ -242,11 +257,16 @@ def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
         :param: valeur
         :param: date
     """
-    genered_hash = hashlib.sha256((donneur + receveur + valeur + date + hash_precedent).encode('utf-8')).hexdigest()
+    genered_hash = hashlib.sha256((donneur + receveur + str(valeur) + date + hash_precedent).encode('utf-8')).hexdigest()
     return genered_hash
 
 
 def get_list_transaction():
+    """
+        Renvoie la liste des transactions
+
+        :return: liste des transactions
+    """
     liste_users = get_all_users()
     liste_transaction = []
     for i in range(len(liste_users)):
@@ -258,17 +278,35 @@ def get_list_transaction():
     return liste_transaction
 
 
-def verifier_une_transaction(transaction):
+def verifier_une_transaction(transaction, last_transaction=""):
+    """
+        Permet de vérifier une transaction
+
+        :param transaction: la transaction à vérifier
+        :return: True si la transaction est valide, False sinon
+    """
+
+    if last_transaction == "":
+        hash_precedent = ""
+    else:
+        hash_precedent = rTransaction.get("transaction." + str(last_transaction) + ".hash")
+
     verified_hash = generer_hash(donneur=rTransaction.get("transaction." + str(transaction) + ".donneur"),
                                  receveur=rTransaction.get("transaction." + str(transaction) + ".receveur"),
                                  valeur=rTransaction.get("transaction." + str(transaction) + ".valeur"),
-                                 date=rTransaction.get("transaction." + str(transaction) + ".date"))
+                                 date=rTransaction.get("transaction." + str(transaction) + ".date"),
+                                 hash_precedent=hash_precedent)
     if verified_hash != rTransaction.get("transaction." + str(transaction) + ".hash"):
         return False
     return True
 
 
 def get_last_hash():
+    """
+        Permet de renvoyer le hash de la dernière transaction
+
+        :return: le hash de la dernière transaction
+    """
     liste_transaction = get_list_transaction()
     previous_hash = rTransaction.get("transaction." + str(liste_transaction[-2]) + ".hash")
     return str(previous_hash)
