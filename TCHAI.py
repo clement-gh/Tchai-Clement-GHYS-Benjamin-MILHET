@@ -20,6 +20,7 @@ rTransaction = redis.Redis(host='TCHAI_redis', port=6379, db=1, decode_responses
 def hello_world():
     return "Hello, world!"
 
+
 @app.route("/getAllUsers", methods=['GET'])
 def get_all_users():
     """
@@ -27,13 +28,14 @@ def get_all_users():
 
         :return: Un JSON contenant tous les utilisateurs
     """
-	# curl -X GET  http://127.0.0.1:5000/getAllUsers
+    # curl -X GET  http://127.0.0.1:5000/getAllUsers
 
     liste_res = []
     tmp = rUser.keys("nom.*")
     for i in range(len(tmp)):
         liste_res.append(tmp[i][4:])
     return liste_res
+
 
 @app.route("/getTransactions", methods=['GET'])
 def get_transactions():
@@ -54,8 +56,12 @@ def get_transactions():
     liste_transaction = list(set(liste_transaction))
 
     for j in range(len(liste_transaction)):
-        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"), receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"), valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"), date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
+        liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
+                              receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
+                              valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
+                              date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
     return liste_res
+
 
 @app.route("/getTransactionsParPersonne", methods=['POST'])
 def get_transactions_par_personne():
@@ -83,6 +89,7 @@ def get_transactions_par_personne():
                               receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
                               valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
     return liste_res
+
 
 @app.route("/chargerDonnees", methods=['GET'])
 def charger_donnees():
@@ -116,6 +123,7 @@ def charger_donnees():
 
     return "Le chargement des données à réussi."
 
+
 @app.route("/enregisterTransaction", methods=['POST'])
 def enregistrer_transaction():
     """
@@ -143,29 +151,29 @@ def enregistrer_transaction():
         rUser.set("transaction." + receveur, json.dumps([]))
         rUser.set("solde." + receveur, "0")
 
-    liste_transaction_donneur= json.loads(rUser.get("transaction." + donneur))
-    liste_transactin_receveur= json.loads(rUser.get("transaction." + receveur))
+    liste_transaction_donneur = json.loads(rUser.get("transaction." + donneur))
+    liste_transactin_receveur = json.loads(rUser.get("transaction." + receveur))
 
-    #on ajoute la transaction au donneur
-    liste_transaction_donneur.append(time_stamp)   
+    # on ajoute la transaction au donneur
+    liste_transaction_donneur.append(time_stamp)
     rUser.set("transaction." + donneur, json.dumps(liste_transaction_donneur))
-    
-    #on ajoute la transaction au receveur
+
+    # on ajoute la transaction au receveur
     liste_transactin_receveur.append(time_stamp)
     rUser.set("transaction." + receveur, json.dumps(liste_transactin_receveur))
 
-    #on ajoute la transaction 
+    # on ajoute la transaction
     rTransaction.set("transaction." + str(time_stamp) + ".donneur", donneur)
     rTransaction.set("transaction." + str(time_stamp) + ".receveur", receveur)
     rTransaction.set("transaction." + str(time_stamp) + ".valeur", valeur)
     rTransaction.set("transaction." + str(time_stamp) + ".date", date)
 
-    #mise a jour du solde du donneur
+    # mise a jour du solde du donneur
     solde_donneur = int(rUser.get("solde." + donneur))
     solde_donneur = solde_donneur - int(valeur)
     rUser.set("solde." + donneur, str(solde_donneur))
 
-    #mise a jour du solde du receveur
+    # mise a jour du solde du receveur
     solde_receveur = int(rUser.get("solde." + receveur))
     solde_receveur = solde_receveur + int(valeur)
     rUser.set("solde." + receveur, str(solde_receveur))
