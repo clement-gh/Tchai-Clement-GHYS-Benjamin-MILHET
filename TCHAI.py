@@ -301,13 +301,7 @@ def generate_keys():
     ).decode("utf-8")
     return pem, pem2
 
-def convert_key_in_pem(key):
-    pem = key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
-    ).decode("utf-8")
-    return pem
+
 
 def verify_transaction(public_key, transaction_data, signature):
     try:
@@ -325,27 +319,21 @@ def verify_transaction(public_key, transaction_data, signature):
         print("Verification failed:", e)
         return False
 
-@app.route("/generateKeys", methods=['POST'])
-def generate_keys_route():
-    """
-        Permet de générer une paire de clé privée/publique
 
-        :return: Un JSON contenant la clé publique
-    """
-    # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"user\":\"Benjamin\"}" http://localhost:5000/generateKeys
+
+
+@app.route("/register", methods=['POST'])
+def register():
     data = request.get_json()
-    user = data.get("user")
-    private_key, public_key = generate_keys()
-    if rUser.get("nom." + user) is None:
-        rUser.set("nom." + user, user)
-        rUser.set("transaction." + user, json.dumps([]))
-        rUser.set("solde." + user, "0")
-        rUser.set("public_key." + user, public_key)
+    nom = data.get('nom')
+    solde = data.get('solde')
+    if rUser.get("nom." + nom) is None:
+        rUser.set("nom." + nom, nom)
+        rUser.set("transaction." + nom, json.dumps([]))
+        rUser.set("solde." + nom, solde)
+        return "L'utilisateur a été enregistré.", 200
     else:
-        rUser.set("public_key." + user, public_key)
-    return private_key
-
-
+        return "L'utilisateur existe déjà.", 400
 
 
 if __name__ == '__main__':
