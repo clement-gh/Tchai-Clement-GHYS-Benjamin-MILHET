@@ -113,7 +113,7 @@ def charger_donnees():
     """
     # curl -X GET http://localhost:5000/chargerDonnees
 
-    if get_all_users() != [] or get_transactions() != []:
+    if len(get_all_users()) == 0 or len(get_transactions()) == 0:
         return "Les données sont déjà chargées.", 200
 
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
@@ -397,7 +397,7 @@ def verify_key(public_key, transaction_data, signature):
 """
     Permet de charger les données dans la base de données
 """
-#charger_donnees()
+charger_donnees()
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:

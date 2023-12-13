@@ -180,3 +180,37 @@ status : 400
 ```
 curl -X GET  http://localhost:5000/verifierTransactions
 ```
+
+### Enregistrement d'une nouvelle personne
+
+Permet d'enregistrer une nouvelle personne.
+
+#### Données envoyées
+
+Méthode : POST
+
+```
+{
+    "nom": "Nom de l'utilisateur",
+    "solde": "Solde de départ de l'utilisateur",
+    "clePublique": "Clé publique de l'utilisateur",
+}
+```
+
+#### Données reçues
+
+```
+message : "L'utilisateur a été enregistré."
+status : 200
+
+ou
+
+message : "L'utilisateur existe déjà."
+status : 400
+```
+
+#### Exemple de requête
+
+```
+curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"nom\":\"Benjamin\", \"solde\":\"100\", \"cle_publique\":\"cle_publique\"}" http://localhost:5000/register
+```
