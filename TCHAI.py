@@ -69,7 +69,7 @@ def get_transactions():
     return liste_res
 
 
-@app.route("/getTransactionsParPersonne", methods=['POST']) # ATTENTION: Retourne uniquement les transactions dont la personne est le donneur
+@app.route("/getTransactionsParPersonne", methods=['POST'])
 def get_transactions_par_personne():
     """
         Renvoie la liste des transactions pour une personne
@@ -91,7 +91,7 @@ def get_transactions_par_personne():
     liste_transaction = list(set(liste_transaction))
 
     for j in range(len(liste_transaction)):
-        if verifier_une_transaction(liste_transaction[j]):
+
             liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
                                   receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
                                   valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
@@ -108,6 +108,8 @@ def charger_donnees():
     """
     # curl -X GET http://localhost:5000/chargerDonnees
 
+    if get_all_users() != [] or get_transactions() != []:
+        return "Les données sont déjà chargées.",200
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
     # charger users
@@ -136,7 +138,7 @@ def charger_donnees():
                                   valeur="300", date=date,
                                   hash_precedent=rTransaction.get("transaction.1.hash")))
 
-    return "Le chargement des données à réussi."
+    return "Le chargement des données à réussi.",201
 
 
 @app.route("/enregisterTransaction", methods=['POST'])
@@ -171,9 +173,6 @@ def enregistrer_transaction():
         return "user is None",400
     if not verify_key(user_public_key,user + donneur + receveur + valeur,  decoded_signature):
         return "verification de la clef publi a echoue",400 #probleme de clef publique !!!
-
-
-    
 
 
     liste_transaction_donneur = json.loads(rUser.get("transaction." + donneur))
@@ -337,8 +336,7 @@ def verify_key(public_key, transaction_data, signature):
         return  e
 
 #### Chargement des donnees  au démarage ####
-charger_donnees() # fonctionne mais se relance a chaque fois que l'on fait un docker-compose up 
-# TODO: verifier si les donnees sont deja presentes dans la base de donnees avant de les charger
+charger_donnees()
 
 
 if __name__ == '__main__':
