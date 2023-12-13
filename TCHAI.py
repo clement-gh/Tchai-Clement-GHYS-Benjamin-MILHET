@@ -1,11 +1,22 @@
 import calendar
 import time
+
 from flask import Flask, request
 import sys
 import redis
 import json
 import hashlib
 import datetime
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
+
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
+import base64
+from cryptography.hazmat.primitives import serialization
 
 from flask_cors import CORS
 
@@ -97,7 +108,9 @@ def get_transactions_par_personne():
     return liste_res, 200
 
 
-@app.route("/chargerDonnees", methods=['GET'])
+
+#@app.route("/chargerDonnees", methods=['GET'])
+
 def charger_donnees():
     """
         Permet de charger les données dans la base de données
@@ -106,6 +119,8 @@ def charger_donnees():
     """
     # curl -X GET http://localhost:5000/chargerDonnees
 
+    if get_all_users() != [] or get_transactions() != []:
+        return "Les données sont déjà chargées.",200
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     time_stamp = calendar.timegm(time.gmtime())
 
@@ -135,7 +150,8 @@ def charger_donnees():
                                   valeur=300, date=date,
                                   hash_precedent=rTransaction.get("transaction.1.hash")))
 
-    return "Le chargement des données à réussi.", 200
+
+    return "Le chargement des données à réussi.",201
 
 
 @app.route("/enregisterTransaction", methods=['POST'])
@@ -153,20 +169,27 @@ def enregistrer_transaction():
     time_stamp = calendar.timegm(time.gmtime())
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
+
     data = request.get_json()
     donneur = data.get("donneur")
     receveur = data.get("receveur")
     valeur = data.get("valeur")
+    signature = data.get("signature")
+    decoded_signature = base64.b64decode(signature.encode('utf-8'))
 
+    user =  data.get("user")
+    user_public_key = rUser.get("public_key." + user)
+    user_public_key = load_pem_public_key(user_public_key.encode('utf-8'))
     if rUser.get("nom." + donneur) is None:
-        rUser.set("nom." + donneur, donneur)
-        rUser.set("transaction." + donneur, json.dumps([]))
-        rUser.set("solde." + donneur, "0")
-
+        return "Le donneur n'existe pas.", 400
     if rUser.get("nom." + receveur) is None:
-        rUser.set("nom." + receveur, receveur)
-        rUser.set("transaction." + receveur, json.dumps([]))
-        rUser.set("solde." + receveur, "0")
+        return "Le receveur n'existe pas.", 400
+
+    if user is None:
+        return "user is None",400
+    if not verify_key(user_public_key,user + donneur + receveur + valeur,  decoded_signature):
+        return "verification de la clef publi a echoue",400 #probleme de clef publique !!!
+
 
     liste_transaction_donneur = json.loads(rUser.get("transaction." + donneur))
     liste_transactin_receveur = json.loads(rUser.get("transaction." + receveur))
@@ -248,6 +271,23 @@ def verifier_transactions():
     return "Toutes les transactions sont valides.", 200
 
 
+@app.route("/register", methods=['POST'])
+def register():
+    data = request.get_json()
+    nom = data.get('nom')
+    solde = data.get('solde')
+    key = data.get('cle_publique')
+    if rUser.get("nom." + nom) is None:
+        rUser.set("nom." + nom, nom)
+        rUser.set("transaction." + nom, json.dumps([]))
+        rUser.set("solde." + nom, solde)
+        rUser.set("public_key." + nom, key)
+        return "L'utilisateur a été enregistré.", 200
+    else:
+        return "L'utilisateur existe déjà.", 400
+
+
+
 def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
     """
         Permet de générer un hash pour une transaction
@@ -260,6 +300,12 @@ def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
     genered_hash = hashlib.sha256((donneur + receveur + str(valeur) + date + hash_precedent).encode('utf-8')).hexdigest()
     return genered_hash
 
+def convert_public_key_to_pem(public_key):
+    pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    ).decode("utf-8")
+    return pem
 
 def get_list_transaction():
     """
@@ -310,6 +356,27 @@ def get_last_hash():
     liste_transaction = get_list_transaction()
     previous_hash = rTransaction.get("transaction." + str(liste_transaction[-2]) + ".hash")
     return str(previous_hash)
+
+
+
+def verify_key(public_key, transaction_data, signature):
+    try:
+        public_key.verify(
+            signature,
+            transaction_data.encode('utf-8'),  # Assurez-vous que les données sont encodées en bytes
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+        return True
+    except Exception as e:
+        print("Verification failed:", e)
+        return  e
+
+#### Chargement des donnees  au démarage ####
+charger_donnees()
 
 
 if __name__ == '__main__':
