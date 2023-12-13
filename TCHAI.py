@@ -181,17 +181,18 @@ def enregistrer_transaction():
     return "La transaction a été enregistrée."
 
 
-@app.route("/getSolde", methods=['GET'])
+@app.route("/getSolde", methods=['POST'])
 def get_solde():
     """
         Renvoie le solde d'un utilisateur
 
         :return: le solde de l'utilisateur
     """
-    # curl -X GET  http://localhost:5000/getSolde?nom=Benjamin
+    # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"nom\":\"Benjamin\"}" http://localhost:5000/getSolde
 
-    nom = request.args.get('nom')
-    return rUser.get("solde." + nom)
+    data = request.get_json()
+    nom = data.get("nom")
+    return rUser.get("solde." + nom), 200
 
 
 if __name__ == '__main__':
