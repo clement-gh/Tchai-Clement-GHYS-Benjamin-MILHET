@@ -126,12 +126,23 @@ def create_transaction():
     sender(donnees, url)
 
 
+def getTransactionsParPersonne():
+    # input username
+    username = input("Enter username: ")
+    # send data to server
+    url = "/getTransactionsParPersonne"
+    donnees = {
+        'nom': username
+    }
+    sender(donnees, url)
+
+
 def sender(donnees, url):
     url = URL + url
     try:
         reponse = requests.post(url, json=donnees)
         if reponse.status_code == 200:
-            print("Enregistrement effectué avec succès !")
+           print(reponse.text)
         else:
             print(f"Échec de l'envoi de la transaction : {reponse.text}")
     except requests.exceptions.RequestException as e:
@@ -155,6 +166,7 @@ if __name__ == "__main__":
         print("2. Create transaction")
         print("3. Get all users")
         print("4. Get all transactions")
+        print("5. Get transactions par personne")
         print("q. Quit")
         choice = input("Enter your choice: ")
         if choice == "1":
@@ -165,6 +177,9 @@ if __name__ == "__main__":
             getter("/getAllUsers")
         elif choice == "4":
             getter("/getTransactions")
+        elif choice == "5":
+            getTransactionsParPersonne()
+
         elif choice == "q":
             break
         else:
