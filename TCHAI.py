@@ -69,7 +69,7 @@ def get_transactions():
     return liste_res
 
 
-@app.route("/getTransactionsParPersonne", methods=['POST'])
+@app.route("/getTransactionsParPersonne", methods=['POST']) # ATTENTION: Retourne uniquement les transactions dont la personne est le donneur
 def get_transactions_par_personne():
     """
         Renvoie la liste des transactions pour une personne
@@ -98,7 +98,8 @@ def get_transactions_par_personne():
     return liste_res
 
 
-@app.route("/chargerDonnees", methods=['GET'])
+#@app.route("/chargerDonnees", methods=['GET'])
+
 def charger_donnees():
     """
         Permet de charger les données dans la base de données
@@ -334,6 +335,11 @@ def verify_key(public_key, transaction_data, signature):
     except Exception as e:
         print("Verification failed:", e)
         return  e
+
+#### Chargement des donnees  au démarage ####
+charger_donnees() # fonctionne mais se relance a chaque fois que l'on fait un docker-compose up 
+# TODO: verifier si les donnees sont deja presentes dans la base de donnees avant de les charger
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
