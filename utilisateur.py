@@ -10,6 +10,8 @@ import os
 
 import requests
 
+URL = "http://localhost:5000"
+
 def envoyer_donnees_utilisateur(nom_utilisateur, solde, cle_publique):
     url = 'http://localhost:5000/register'
     donnees = {
@@ -89,12 +91,15 @@ def create_user():
     with open(path, "rb") as f:
         public_key = load_pem_public_key(f.read(), backend=default_backend())
 
-    # convert public key in pem
     pem = convert_public_key_to_pem(public_key)
     # send data to server
-    envoyer_donnees_utilisateur(username, solde, pem)
-
-
+    donnees = {
+        'nom': username,
+        'solde': solde,
+        'cle_publique': pem
+    }
+    url = "/register"
+    sender(donnees, url)
 
 
 def create_transaction():
@@ -110,7 +115,7 @@ def create_transaction():
     signature = sign_transaction(private_key, data)
     encoded_signature = base64.b64encode(signature).decode('utf-8')
     # send data to server
-    url = 'http://localhost:5000/enregisterTransaction'
+    url = "/enregisterTransaction"
     donnees = {
         'user': username,
         'receveur': receveur,
@@ -118,28 +123,49 @@ def create_transaction():
         'donneur': donneur,
         'signature': encoded_signature
     }
+    sender(donnees, url)
 
+
+def sender(donnees, url):
+    url = URL + url
     try:
         reponse = requests.post(url, json=donnees)
         if reponse.status_code == 200:
-            print("Transaction envoyée avec succès !")
+            print("Enregistrement effectué avec succès !")
         else:
-            #print(f"Échec de l'envoi de la transaction : {reponse.status_code}")
-            print(reponse.text)
+            print(f"Échec de l'envoi de la transaction : {reponse.text}")
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la requête : {e}")
+
+def getter(url):
+    url = URL + url
+    try:
+        reponse = requests.get(url)
+        if reponse.status_code == 200:
+            print (reponse.text)
+        else:
+            print(f"Échec de récupération: {reponse.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"Erreur lors de la requête : {e}")
+
 # main
 if __name__ == "__main__":
     while True:
         print("1. Create user")
         print("2. Create transaction")
-        print("3. Quit")
+        print("3. Get all users")
+        print("4. Get all transactions")
+        print("q. Quit")
         choice = input("Enter your choice: ")
         if choice == "1":
             create_user()
         elif choice == "2":
             create_transaction()
         elif choice == "3":
+            getter("/getAllUsers")
+        elif choice == "4":
+            getter("/getTransactions")
+        elif choice == "q":
             break
         else:
             print("Invalid choice !")
