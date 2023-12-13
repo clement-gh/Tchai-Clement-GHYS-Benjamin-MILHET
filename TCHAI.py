@@ -50,23 +50,21 @@ def get_transactions():
     liste_res = []
     liste_transaction = get_list_transaction()
 
-    for j in range(len(liste_transaction)):
-        if j == 0:
-            if verifier_une_transaction(liste_transaction[j]):
-                liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
-                                      receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
-                                      valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
-                                      date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
-            else:
-                return "La transaction " + str(liste_transaction[j]) + " n'est pas valide.", 400
-        else:
-            if verifier_une_transaction(liste_transaction[j], liste_transaction[j - 1]):
-                liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
-                                      receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
-                                      valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
-                                      date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
-            else:
-                return "La transaction " + str(liste_transaction[j]) + " n'est pas valide.", 400
+    for j, transaction in enumerate(liste_transaction):
+        valid = verifier_une_transaction(transaction) if j == 0 else verifier_une_transaction(transaction,
+                                                                                              liste_transaction[j - 1])
+
+        if not valid:
+            return f"La transaction {transaction} n'est pas valide.", 400
+
+        transaction_key = f"transaction.{transaction}."
+        liste_res.append({
+            "donneur": rTransaction.get(transaction_key + "donneur"),
+            "receveur": rTransaction.get(transaction_key + "receveur"),
+            "valeur": rTransaction.get(transaction_key + "valeur"),
+            "date": rTransaction.get(transaction_key + "date")
+        })
+
     return liste_res, 200
 
 
@@ -94,7 +92,8 @@ def get_transactions_par_personne():
     for j in range(len(liste_transaction)):
         liste_res.append(dict(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
                               receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
-                              valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur")))
+                              valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
+                              date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date")))
     return liste_res, 200
 
 
@@ -206,16 +205,17 @@ def enregistrer_transaction():
     return "La transaction a été enregistrée.", 200
 
 
-@app.route("/getSolde", methods=['GET'])
+@app.route("/getSolde", methods=['POST'])
 def get_solde():
     """
         Renvoie le solde d'un utilisateur
 
         :return: le solde de l'utilisateur
     """
-    # curl -X GET  http://localhost:5000/getSolde?nom=Benjamin
+    # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"nom\":\"Benjamin\"}" http://localhost:5000/getSolde
 
-    nom = request.args.get('nom')
+    data = request.get_json()
+    nom = data.get("nom")
     return rUser.get("solde." + nom), 200
 
 
@@ -267,7 +267,7 @@ def get_list_transaction():
 
         :return: liste des transactions
     """
-    liste_users = get_all_users()
+    liste_users, _ = get_all_users()
     liste_transaction = []
     for i in range(len(liste_users)):
         if rUser.get(("transaction." + liste_users[i])) is not None:
@@ -282,10 +282,10 @@ def verifier_une_transaction(transaction, last_transaction=""):
     """
         Permet de vérifier une transaction
 
+        :param last_transaction: la transaction précédente
         :param transaction: la transaction à vérifier
         :return: True si la transaction est valide, False sinon
     """
-
     if last_transaction == "":
         hash_precedent = ""
     else:
