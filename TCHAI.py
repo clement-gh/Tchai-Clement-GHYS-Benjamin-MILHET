@@ -212,7 +212,7 @@ def enregistrer_transaction():
     return "La transaction a été enregistrée.", 200
 
 
-@app.route("/getSolde", methods=['GET'])
+@app.route("/getSolde", methods=['GET']) #TODO: Changer en POST 
 def get_solde():
     """
         Renvoie le solde d'un utilisateur
@@ -252,6 +252,23 @@ def verifier_transactions():
             return "La transaction " + str(liste_transaction[j]) + " n'est pas valide."
 
     return "Toutes les transactions sont valides."
+
+
+@app.route("/register", methods=['POST'])
+def register():
+    data = request.get_json()
+    nom = data.get('nom')
+    solde = data.get('solde')
+    key = data.get('cle_publique')
+    if rUser.get("nom." + nom) is None:
+        rUser.set("nom." + nom, nom)
+        rUser.set("transaction." + nom, json.dumps([]))
+        rUser.set("solde." + nom, solde)
+        rUser.set("public_key." + nom, key)
+        return "L'utilisateur a été enregistré.", 200
+    else:
+        return "L'utilisateur existe déjà.", 400
+
 
 
 def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
@@ -302,8 +319,6 @@ def get_last_hash():
 
 
 
-
-
 def verify_key(public_key, transaction_data, signature):
     try:
         public_key.verify(
@@ -319,23 +334,6 @@ def verify_key(public_key, transaction_data, signature):
     except Exception as e:
         print("Verification failed:", e)
         return  e
-
-
-@app.route("/register", methods=['POST'])
-def register():
-    data = request.get_json()
-    nom = data.get('nom')
-    solde = data.get('solde')
-    key = data.get('cle_publique')
-    if rUser.get("nom." + nom) is None:
-        rUser.set("nom." + nom, nom)
-        rUser.set("transaction." + nom, json.dumps([]))
-        rUser.set("solde." + nom, solde)
-        rUser.set("public_key." + nom, key)
-        return "L'utilisateur a été enregistré.", 200
-    else:
-        return "L'utilisateur existe déjà.", 400
-
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
