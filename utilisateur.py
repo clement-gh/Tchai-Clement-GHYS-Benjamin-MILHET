@@ -13,6 +13,13 @@ URL = "http://localhost:5000"
 
 
 def envoyer_donnees_utilisateur(nom_utilisateur, solde, cle_publique):
+    """
+        Envoie les données d'un utilisateur au serveur
+
+        :param nom_utilisateur:
+        :param solde:
+        :param cle_publique:
+    """
     url = 'http://localhost:5000/register'
     donnees = {
         'nom': nom_utilisateur,
@@ -31,7 +38,11 @@ def envoyer_donnees_utilisateur(nom_utilisateur, solde, cle_publique):
 
 
 def generate_keys():
-    """Génère une paire de clés publique/privée"""
+    """
+        Génère une paire de clés publique/privée
+
+        :return: private_key, public_key
+    """
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
@@ -42,8 +53,15 @@ def generate_keys():
 
 
 def sign_transaction(private_key, transaction_data):
+    """
+        Signe une transaction avec la clé privée de l'utilisateur
+
+        :param private_key:
+        :param transaction_data:
+        :return: signature
+    """
     signature = private_key.sign(
-        transaction_data.encode('utf-8'),  # Assurez-vous que les données sont encodées en bytes
+        transaction_data.encode('utf-8'),
         padding.PSS(
             mgf=padding.MGF1(hashes.SHA256()),
             salt_length=padding.PSS.MAX_LENGTH
@@ -54,6 +72,11 @@ def sign_transaction(private_key, transaction_data):
 
 
 def convert_public_key_to_pem(public_key):
+    """
+        Convertit la clé publique en PEM
+        :param public_key:
+        :return: la clé publique au format PEM
+    """
     pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
@@ -62,6 +85,11 @@ def convert_public_key_to_pem(public_key):
 
 
 def register_keys(private_key, public_key):
+    """
+
+        :param private_key:
+        :param public_key:
+    """
     with open("private_key.pem", "wb") as f:
         f.write(private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
@@ -76,6 +104,9 @@ def register_keys(private_key, public_key):
 
 
 def delete_keys():
+    """
+        Supprime les clés privée et publique
+    """
     if os.path.exists("private_key.pem"):
         os.remove("private_key.pem")
     if os.path.exists("public_key.pem"):
@@ -83,6 +114,9 @@ def delete_keys():
 
 
 def create_user():
+    """
+        Crée un utilisateur
+    """
     # input username and solde
     username = input("Enter your username: ")
     solde = input("Enter your solde: ")
@@ -105,6 +139,9 @@ def create_user():
 
 
 def create_transaction():
+    """
+        Crée une transaction
+    """
     # input username and solde
     username = input("Enter your username: ")
     donneur = input("Enter the username of the donneur: ")
@@ -129,6 +166,10 @@ def create_transaction():
 
 
 def get_transactions_par_personne():
+    """
+        Récupère les transactions d'une personne
+    :return: l'ensemble des transactions d'une personne
+    """
     # input username
     username = input("Enter username: ")
     # send data to server
@@ -140,6 +181,10 @@ def get_transactions_par_personne():
 
 
 def get_solde_personne():
+    """
+        Récupère le solde d'une personne
+    :return: le solde d'une personne
+    """
     # input username
     username = input("Enter username: ")
     # send data to server
@@ -151,6 +196,12 @@ def get_solde_personne():
 
 
 def sender(donnees, url):
+    """
+        Envoie les données au serveur
+
+        :param donnees:
+        :param url:
+    """
     url = URL + url
     try:
         reponse = requests.post(url, json=donnees)
@@ -163,6 +214,11 @@ def sender(donnees, url):
 
 
 def getter(url):
+    """
+        Récupère les données du serveur
+
+        :param url:
+    """
     url = URL + url
     try:
         reponse = requests.get(url)
