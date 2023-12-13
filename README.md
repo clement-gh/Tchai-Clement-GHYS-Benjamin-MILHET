@@ -37,6 +37,9 @@ Cette API développée en python a pour but de pouvoir gérer des transactions e
 ## Langages
 Pour réaliser notre API, nous avons utiliser le langage Python avec le framework Flask permettant le dévelopement web avec Python. Pour le stockage des données, nous utilisons le système de gestion de base de données clé-valeur Redis qui est de type NoSQL.
 
+### Cryptographie asymétrique
+Pour assurer l'authenticité de l'expéditeur, nous avons utilisé la cryptographie asymétrique. En effet, nous avons généré une clé privée et une clé publique pour chaque utilisateur. L'utilisateur envoie sa clé publique au serveur pour qu'il puisse la stocker dans la base de données REDIS. Lorsqu'un utilisateur veut envoyer une transaction, il doit signer la transaction avec sa clé privée. Lorsque le serveur reçoit la transaction, il vérifie la signature avec la clé publique de l'utilisateur. Si la signature est valide, la transaction est enregistrée dans la base de données.
+
 ## Documentations
 
  - [Readme de l'API](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/blob/main/README_API.md)
