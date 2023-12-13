@@ -1,16 +1,16 @@
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
+
 import base64
 import os
-
 import requests
 
 URL = "http://localhost:5000"
+
 
 def envoyer_donnees_utilisateur(nom_utilisateur, solde, cle_publique):
     url = 'http://localhost:5000/register'
@@ -29,6 +29,7 @@ def envoyer_donnees_utilisateur(nom_utilisateur, solde, cle_publique):
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la requête : {e}")
 
+
 def generate_keys():
     """Génère une paire de clés publique/privée"""
     private_key = rsa.generate_private_key(
@@ -38,7 +39,6 @@ def generate_keys():
     )
     public_key = private_key.public_key()
     return private_key, public_key
-
 
 
 def sign_transaction(private_key, transaction_data):
@@ -52,6 +52,7 @@ def sign_transaction(private_key, transaction_data):
     )
     return signature
 
+
 def convert_public_key_to_pem(public_key):
     pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
@@ -61,12 +62,6 @@ def convert_public_key_to_pem(public_key):
 
 
 def register_keys(private_key, public_key):
-    '''
-    if (os.path.exists("private_key.pem")):
-        os.remove("private_key.pem")
-    if (os.path.exists("public_key.pem")):
-        os.remove("public_key.pem")
-    '''
     with open("private_key.pem", "wb") as f:
         f.write(private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
@@ -80,12 +75,19 @@ def register_keys(private_key, public_key):
         ))
 
 
+def delete_keys():
+    if os.path.exists("private_key.pem"):
+        os.remove("private_key.pem")
+    if os.path.exists("public_key.pem"):
+        os.remove("public_key.pem")
+
+
 def create_user():
     # input username and solde
     username = input("Enter your username: ")
     solde = input("Enter your solde: ")
-    pi,pu=generate_keys()
-    register_keys(pi,pu)
+    pi, pu = generate_keys()
+    register_keys(pi, pu)
     # load public key
     path = "public_key.pem"
     with open(path, "rb") as f:
@@ -106,10 +108,10 @@ def create_transaction():
     # input username and solde
     username = input("Enter your username: ")
     donneur = input("Enter the username of the donneur: ")
-    valeur= input("Enter the amount: ")
+    valeur = input("Enter the amount: ")
     receveur = input("Enter the username of the receveur: ")
     # sign transaction
-    private_key= load_pem_private_key(open("private_key.pem", "rb").read(), password=None)
+    private_key = load_pem_private_key(open("private_key.pem", "rb").read(), password=None)
 
     data = username + donneur + receveur + valeur
     signature = sign_transaction(private_key, data)
@@ -126,11 +128,22 @@ def create_transaction():
     sender(donnees, url)
 
 
-def getTransactionsParPersonne():
+def get_transactions_par_personne():
     # input username
     username = input("Enter username: ")
     # send data to server
     url = "/getTransactionsParPersonne"
+    donnees = {
+        'nom': username
+    }
+    sender(donnees, url)
+
+
+def get_solde_personne():
+    # input username
+    username = input("Enter username: ")
+    # send data to server
+    url = "/getSolde"
     donnees = {
         'nom': username
     }
@@ -142,22 +155,24 @@ def sender(donnees, url):
     try:
         reponse = requests.post(url, json=donnees)
         if reponse.status_code == 200:
-           print(reponse.text)
+            print(reponse.text)
         else:
             print(f"Échec de l'envoi de la transaction : {reponse.text}")
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la requête : {e}")
+
 
 def getter(url):
     url = URL + url
     try:
         reponse = requests.get(url)
         if reponse.status_code == 200:
-            print (reponse.text)
+            print(reponse.text)
         else:
             print(f"Échec de récupération: {reponse.status_code}")
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la requête : {e}")
+
 
 # main
 if __name__ == "__main__":
@@ -166,7 +181,8 @@ if __name__ == "__main__":
         print("2. Create transaction")
         print("3. Get all users")
         print("4. Get all transactions")
-        print("5. Get transactions par personne")
+        print("5. Get solde for a person")
+        print("6. Get transactions par personne")
         print("q. Quit")
         choice = input("Enter your choice: ")
         if choice == "1":
@@ -178,8 +194,9 @@ if __name__ == "__main__":
         elif choice == "4":
             getter("/getTransactions")
         elif choice == "5":
-            getTransactionsParPersonne()
-
+            get_solde_personne()
+        elif choice == "6":
+            get_transactions_par_personne()
         elif choice == "q":
             break
         else:

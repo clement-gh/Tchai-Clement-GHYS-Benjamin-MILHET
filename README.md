@@ -1,7 +1,7 @@
 # TCHAI
 
-## TCHAI V3
-L'amélioration principale de cette version est la modification de la fonction de hashage. En effet, dans cette nouvelle version, nous ajoutons le hash de la transaction précédente dans la transaction actuelle. Cela permet de vérifier l'intégrité de la transaction précédente et ainsi de vérifier l'intégrité de l'ensemble des transactions.
+## TCHAI V4
+L'amélioration principale de cette version est l'ajout de la cryptographie asymétrique. Cela permet d'assurer l'authenticité du donneur dans la transaction et aini corriger les éventuelles atatques possibles de la version 3. 
 
 <img src="https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue" /> <img src="https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white" /> <img src="https://img.shields.io/badge/redis-%23DD0031.svg?&style=for-the-badge&logo=redis&logoColor=white" /> <img src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white" /> <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" />
 
@@ -35,6 +35,8 @@ Cette API développée en python a pour but de pouvoir gérer des transactions e
      - Afficher le solde du compte de la personne.
      - Charger des données comprenant deux personnes et deux transactions.
      - Vérification des transactions grâce à un hashage SHA-256 et basé sur le hash de la transaction précédente.
+     - Utilisation de la cryptographie asymétrique afin d’assurer l’authenticité de l’expéditeur.
+
 
 ### Format de la base de données REDIS
 
@@ -53,9 +55,9 @@ Redis
 │   └── transaction.id.hash : Hash de sécurité pour la transaction (String)
 ```
 
-### Script HACKV3
-Le script HACKV3.py permet d'ajouter une nouvelle transaction directement dans la base de données REDIS. Cette transaction utilise le hash de la transaction précédente pour vérifier l'intégrité de la transaction précédente et ainsi de l'ensemble des transactions. Elle n'est pas frauduleuse car la fonction de vérification de hash est toujours valide. Pour contrer cela, nous devons ajouter un système de cryptographie asymétrique.
+### Cryptographie asymétrique
+Pour assurer l'authenticité de l'expéditeur, nous avons utilisé la cryptographie asymétrique. En effet, nous avons généré une clé privée et une clé publique pour chaque utilisateur. L'utilisateur envoie sa clé publique au serveur pour qu'il puisse la stocker dans la base de données REDIS. Lorsqu'un utilisateur veut envoyer une transaction, il doit signer la transaction avec sa clé privée. Lorsque le serveur reçoit la transaction, il vérifie la signature avec la clé publique de l'utilisateur. Si la signature est valide, la transaction est enregistrée dans la base de données.
 
 ### Release
- - [Lien vers la release](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/releases/tag/V3)
- - [Lien vers la branche](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/tree/tchaiV3)
+ - [Lien vers la release](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/releases/tag/V4)
+ - [Lien vers la branche](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/tree/tchaiV4)

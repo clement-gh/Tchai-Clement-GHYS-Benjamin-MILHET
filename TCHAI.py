@@ -8,14 +8,10 @@ import json
 import hashlib
 import datetime
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives import serialization
-
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 import base64
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from cryptography.hazmat.primitives import serialization
 
 from flask_cors import CORS
@@ -108,9 +104,7 @@ def get_transactions_par_personne():
     return liste_res, 200
 
 
-
-#@app.route("/chargerDonnees", methods=['GET'])
-
+@app.route("/chargerDonnees", methods=['GET'])
 def charger_donnees():
     """
         Permet de charger les données dans la base de données
@@ -120,7 +114,8 @@ def charger_donnees():
     # curl -X GET http://localhost:5000/chargerDonnees
 
     if get_all_users() != [] or get_transactions() != []:
-        return "Les données sont déjà chargées.",200
+        return "Les données sont déjà chargées.", 200
+
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     time_stamp = calendar.timegm(time.gmtime())
 
@@ -150,8 +145,7 @@ def charger_donnees():
                                   valeur=300, date=date,
                                   hash_precedent=rTransaction.get("transaction.1.hash")))
 
-
-    return "Le chargement des données à réussi.",201
+    return "Le chargement des données à réussi.", 201
 
 
 @app.route("/enregisterTransaction", methods=['POST'])
@@ -169,7 +163,6 @@ def enregistrer_transaction():
     time_stamp = calendar.timegm(time.gmtime())
     date = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
 
-
     data = request.get_json()
     donneur = data.get("donneur")
     receveur = data.get("receveur")
@@ -177,7 +170,7 @@ def enregistrer_transaction():
     signature = data.get("signature")
     decoded_signature = base64.b64decode(signature.encode('utf-8'))
 
-    user =  data.get("user")
+    user = data.get("user")
     user_public_key = rUser.get("public_key." + user)
     user_public_key = load_pem_public_key(user_public_key.encode('utf-8'))
     if rUser.get("nom." + donneur) is None:
@@ -186,10 +179,9 @@ def enregistrer_transaction():
         return "Le receveur n'existe pas.", 400
 
     if user is None:
-        return "user is None",400
-    if not verify_key(user_public_key,user + donneur + receveur + valeur,  decoded_signature):
-        return "verification de la clef publi a echoue",400 #probleme de clef publique !!!
-
+        return "user is None", 400
+    if not verify_key(user_public_key, user + donneur + receveur + valeur, decoded_signature):
+        return "verification de la clef publi a echoue", 400  # probleme de clef publique !!!
 
     liste_transaction_donneur = json.loads(rUser.get("transaction." + donneur))
     liste_transactin_receveur = json.loads(rUser.get("transaction." + receveur))
@@ -260,7 +252,8 @@ def verifier_transactions():
             hash_precedent = rTransaction.get("transaction." + str(liste_transaction[j - 1]) + ".hash")
 
         calculed_hash = generer_hash(donneur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".donneur"),
-                                     receveur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".receveur"),
+                                     receveur=rTransaction.get(
+                                         "transaction." + str(liste_transaction[j]) + ".receveur"),
                                      valeur=rTransaction.get("transaction." + str(liste_transaction[j]) + ".valeur"),
                                      date=rTransaction.get("transaction." + str(liste_transaction[j]) + ".date"),
                                      hash_precedent=hash_precedent)
@@ -273,6 +266,16 @@ def verifier_transactions():
 
 @app.route("/register", methods=['POST'])
 def register():
+    """
+        Permet d'enregistrer un utilisateur
+
+        :param: nom de l'utilisateur
+        :param: solde de l'utilisateur
+        :param: clé publique de l'utilisateur
+    :return: Un JSON contenant le message de confirmation
+    """
+    # curl -X POST -H "Content-Type: application/json; charset=utf-8" --data "{\"nom\":\"Benjamin\", \"solde\":\"100\", \"cle_publique\":\"cle_publique\"}" http://localhost:5000/register
+
     data = request.get_json()
     nom = data.get('nom')
     solde = data.get('solde')
@@ -287,7 +290,6 @@ def register():
         return "L'utilisateur existe déjà.", 400
 
 
-
 def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
     """
         Permet de générer un hash pour une transaction
@@ -297,15 +299,24 @@ def generer_hash(donneur, receveur, valeur, date, hash_precedent=""):
         :param: valeur
         :param: date
     """
-    genered_hash = hashlib.sha256((donneur + receveur + str(valeur) + date + hash_precedent).encode('utf-8')).hexdigest()
+    genered_hash = hashlib.sha256(
+        (donneur + receveur + str(valeur) + date + hash_precedent).encode('utf-8')).hexdigest()
     return genered_hash
 
+
 def convert_public_key_to_pem(public_key):
+    """
+        Convertit une clé publique au format PEM
+        :param public_key: clé publique
+        :return: clé publique au format PEM
+    """
+
     pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     ).decode("utf-8")
     return pem
+
 
 def get_list_transaction():
     """
@@ -358,8 +369,15 @@ def get_last_hash():
     return str(previous_hash)
 
 
-
 def verify_key(public_key, transaction_data, signature):
+    """
+        Permet de vérifier une signature
+
+        :param public_key: clé publique
+        :param transaction_data: données de la transaction
+        :param signature: signature
+        :return: True si la signature est valide, False sinon
+    """
     try:
         public_key.verify(
             signature,
@@ -373,11 +391,13 @@ def verify_key(public_key, transaction_data, signature):
         return True
     except Exception as e:
         print("Verification failed:", e)
-        return  e
+        return e
 
-#### Chargement des donnees  au démarage ####
+
+"""
+    Permet de charger les données dans la base de données
+"""
 charger_donnees()
-
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
