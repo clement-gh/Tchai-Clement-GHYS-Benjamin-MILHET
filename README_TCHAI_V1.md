@@ -31,7 +31,7 @@ Redis
 ```
 
 ### Script HACKV1
-Le script HACKV1.py permet de modifier aléatoirement une transaction dans la base de données REDIS. La valeur de la transaction est modifiée. Le fait de modifier la valeur de la transaction permet de ne pas détecter la fraude. En effet, la fonction de vérification ne peut pas vérifier un changement de valeur, il faut alors créer une fonction de vérification de hash.
+Le script HACKV1.py permet de modifier une transaction dans la base de données REDIS. Le fait de modifier la valeur de la transaction permet de ne pas détecter la fraude. En effet, la fonction de vérification ne peut pas vérifier un changement de valeur, il faut alors hasher chaque transaction et ajouter une fonction pour vérifier l'intégriter des transactions.
 
 ### Release
  - [Lien vers la release](https://github.com/clement-gh/Tchai-Clement-GHYS-Benjamin-MILHET/releases/tag/V1)
