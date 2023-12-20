@@ -233,6 +233,8 @@ def getter(url):
 # main
 if __name__ == "__main__":
     while True:
+        print("\n")
+        print("Menu")
         print("1. Create user")
         print("2. Create transaction")
         print("3. Get all users")
