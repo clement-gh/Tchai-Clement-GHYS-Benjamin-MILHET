@@ -102,6 +102,13 @@ def register_keys(private_key, public_key):
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         ))
 
+def generate_and_register_keys():
+    """
+        Génère et enregistre les clés
+    """
+    pi, pu = generate_keys()
+    register_keys(pi, pu)
+
 
 def delete_keys():
     """
@@ -241,6 +248,7 @@ if __name__ == "__main__":
         print("4. Get all transactions")
         print("5. Get solde for a person")
         print("6. Get transactions par personne")
+        print("7. Generate and register keys")
         print("q. Quit")
         choice = input("Enter your choice: ")
         if choice == "1":
@@ -255,6 +263,8 @@ if __name__ == "__main__":
             get_solde_personne()
         elif choice == "6":
             get_transactions_par_personne()
+        elif choice == "7":
+            generate_and_register_keys()
         elif choice == "q":
             break
         else:
